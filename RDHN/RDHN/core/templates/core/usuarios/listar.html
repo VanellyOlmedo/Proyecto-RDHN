@@ -1,0 +1,113 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Usuarios - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">👤 Gestión de Usuarios</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Usuarios</span>
+        <span class="breadcrumb-item">Listado</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Usuarios</h2>
+        <a href="{% url 'core:usuarios_crear' %}" class="btn btn-primary">
+            <span>➕</span> Nuevo Usuario
+        </a>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Socio</th>
+                        <th>Estado</th>
+                        <th>Roles</th>
+                        <th>Último Acceso</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>
+                            <strong>{{ usuario.usuario }}</strong>
+                            {% if usuario.is_superuser %}
+                                <span class="badge badge-error">ADMIN</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ usuario.email }}</td>
+                        <td>
+                            {% if usuario.socio %}
+                                <a href="{% url 'core:socios_detalle' usuario.socio.pk %}">
+                                    {{ usuario.socio.nombre_completo }}
+                                </a>
+                            {% else %}
+                                <span style="color: var(--color-text-dim);">Sin socio</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if usuario.is_active %}
+                                {% if usuario.esta_bloqueado %}
+                                    <span class="badge badge-error">Bloqueado</span>
+                                {% else %}
+                                    <span class="badge badge-success">Activo</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge badge-warning">Inactivo</span>
+                            {% endif %}
+                            
+                            {% if usuario.requiere_cambio_password %}
+                                <span class="badge badge-info">Cambio Pass</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for rol in usuario.roles_activos %}
+                                <span class="badge badge-primary">{{ rol.nombre_rol }}</span>
+                            {% empty %}
+                                <span style="color: var(--color-text-dim);">Sin roles</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if usuario.ultimo_acceso %}
+                                {{ usuario.ultimo_acceso|date:"d/m/Y H:i" }}
+                            {% else %}
+                                <span style="color: var(--color-text-dim);">Nunca</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'core:usuarios_editar' usuario.pk %}" class="btn btn-sm">
+                                ✏️ Editar
+                            </a>
+                            <a href="{% url 'core:usuarios_asignar_roles' usuario.pk %}" class="btn btn-sm btn-primary">
+                                🔐 Roles
+                            </a>
+                            {% if usuario.pk != request.user.pk %}
+                            <form method="post" action="{% url 'core:usuarios_eliminar' usuario.pk %}" style="display: inline;" onsubmit="return confirm('¿Está seguro?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-error">
+                                    🗑️
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px;">
+                            No hay usuarios registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

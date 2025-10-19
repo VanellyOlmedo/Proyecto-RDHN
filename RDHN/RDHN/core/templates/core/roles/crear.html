@@ -1,0 +1,57 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Nuevo Rol - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">🔐 Nuevo Rol</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'core:roles_listar' %}">Roles</a></span>
+        <span class="breadcrumb-item">Nuevo</span>
+    </div>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">Información del Rol</h2>
+    </div>
+    
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">Nombre del Rol</label>
+                {{ form.nombre_rol }}
+                {% if form.nombre_rol.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.nombre_rol.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Descripción</label>
+                {{ form.descripcion }}
+                {% if form.descripcion.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.descripcion.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    {{ form.estado }}
+                    <span class="form-label" style="margin: 0;">Activo</span>
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span> Guardar
+                </button>
+                <a href="{% url 'core:roles_listar' %}" class="btn">
+                    <span>❌</span> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

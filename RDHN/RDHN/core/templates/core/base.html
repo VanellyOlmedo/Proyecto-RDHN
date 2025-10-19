@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Red de Desarrollo Sostenible de Honduras{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Fondo animado -->
+    <div class="background"></div>
+
+    <!-- Layout principal -->
+    <div class="layout">
+        {% if user.is_authenticated %}
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <span class="sidebar-logo">⚡</span>
+                    <span class="sidebar-title">RDHN</span>
+                </div>
+
+                <nav>
+                    <ul class="sidebar-menu">
+                        <!-- DASHBOARD PRINCIPAL -->
+                        <li class="sidebar-item">
+                            <a href="{% url 'core:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'core' %}active{% endif %}">
+                                <span class="sidebar-icon">📊</span>
+                                <span class="sidebar-text">Dashboard</span>
+                            </a>
+                        </li>
+                        
+                        <!-- MÓDULO BANCO -->
+                        <li class="sidebar-item sidebar-dropdown">
+                            <a href="#" class="sidebar-link {% if request.resolver_match.app_name == 'banco' %}active{% endif %}">
+                                <span class="sidebar-icon">🏦</span>
+                                <span class="sidebar-text">Banco</span>
+                                <span class="sidebar-arrow">▼</span>
+                            </a>
+                            <ul class="sidebar-submenu">
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'banco:cuentas_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">💰</span>
+                                        <span class="sidebar-text">Cuentas de Ahorro</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'banco:transacciones_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">💸</span>
+                                        <span class="sidebar-text">Transacciones</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'banco:periodos_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">📊</span>
+                                        <span class="sidebar-text">Períodos de Dividendos</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'banco:notificaciones_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">🔔</span>
+                                        <span class="sidebar-text">Notificaciones</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <!-- MÓDULO FONDO MUTUO -->
+                        <li class="sidebar-item sidebar-dropdown">
+                            <a href="#" class="sidebar-link {% if request.resolver_match.app_name == 'fondo_mutuo' %}active{% endif %}">
+                                <span class="sidebar-icon">🤝</span>
+                                <span class="sidebar-text">Fondo Mutuo</span>
+                                <span class="sidebar-arrow">▼</span>
+                            </a>
+                            <ul class="sidebar-submenu">
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'fondo_mutuo:dashboard' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">📊</span>
+                                        <span class="sidebar-text">Dashboard Fondo</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'fondo_mutuo:aportes_crear' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">💰</span>
+                                        <span class="sidebar-text">Registrar Aporte</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'fondo_mutuo:solicitudes_pendientes' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">⏳</span>
+                                        <span class="sidebar-text">Solicitudes Pendientes</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'fondo_mutuo:solicitudes_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">📋</span>
+                                        <span class="sidebar-text">Todas las Solicitudes</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'fondo_mutuo:solicitudes_crear' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">➕</span>
+                                        <span class="sidebar-text">Nueva Solicitud</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'fondo_mutuo:movimientos_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">📝</span>
+                                        <span class="sidebar-text">Movimientos</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'fondo_mutuo:fondos_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">📅</span>
+                                        <span class="sidebar-text">Períodos</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'fondo_mutuo:reportes_kardex' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">📑</span>
+                                        <span class="sidebar-text">Reporte Kardex</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <!-- GESTIÓN DE SOCIOS -->
+                        <li class="sidebar-item">
+                            <a href="{% url 'core:socios_listar' %}" class="sidebar-link {% if 'socio' in request.path %}active{% endif %}">
+                                <span class="sidebar-icon">👥</span>
+                                <span class="sidebar-text">Socios</span>
+                            </a>
+                        </li>
+                        
+                        <!-- EXPEDIENTES -->
+                        <li class="sidebar-item">
+                            <a href="{% url 'core:expedientes_listar' %}" class="sidebar-link {% if 'expediente' in request.path %}active{% endif %}">
+                                <span class="sidebar-icon">📂</span>
+                                <span class="sidebar-text">Expedientes</span>
+                            </a>
+                        </li>
+                        
+                        <!-- CONFIGURACIÓN -->
+                        <li class="sidebar-item sidebar-dropdown">
+                            <a href="#" class="sidebar-link">
+                                <span class="sidebar-icon">⚙️</span>
+                                <span class="sidebar-text">Configuración</span>
+                                <span class="sidebar-arrow">▼</span>
+                            </a>
+                            <ul class="sidebar-submenu">
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'core:usuarios_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">👤</span>
+                                        <span class="sidebar-text">Usuarios</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'core:roles_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">🔐</span>
+                                        <span class="sidebar-text">Roles</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'core:estados_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">🔄</span>
+                                        <span class="sidebar-text">Estados</span>
+                                    </a>
+                                </li>
+                                <li class="sidebar-subitem">
+                                    <a href="{% url 'banco:tipos_cuenta_listar' %}" class="sidebar-sublink">
+                                        <span class="sidebar-icon">💼</span>
+                                        <span class="sidebar-text">Tipos de Cuenta</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <!-- CERRAR SESIÓN -->
+                        <li class="sidebar-item">
+                            <a href="{% url 'core:logout' %}" class="sidebar-link">
+                                <span class="sidebar-icon">🚪</span>
+                                <span class="sidebar-text">Cerrar Sesión</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Overlay móvil -->
+            <div class="mobile-overlay" id="mobileOverlay"></div>
+
+            <!-- Contenido principal -->
+            <div class="main-content">
+                <!-- Topbar -->
+                <header class="topbar">
+                    <div class="topbar-left">
+                       <button class="topbar-toggle" id="sidebarToggle">
+                            <span>☰</span>
+                        </button>
+                    </div>
+
+                    <div class="topbar-right">
+                        <button class="topbar-icon-btn" id="notificationsBtn" aria-label="Notificaciones">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span class="badge badge-danger">3</span>
+                        </button>
+                        <button class="topbar-icon-btn" id="messagesBtn" aria-label="Mensajes">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span class="badge badge-primary">5</span>
+                        </button>
+                        <div class="topbar-user">
+                            <div class="topbar-avatar">{{ user.get_short_name.0|default:"U" }}</div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Contenido -->
+                <main class="content">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                <span>
+                                    {% if message.tags == 'success' %}✓
+                                    {% elif message.tags == 'error' %}✕
+                                    {% elif message.tags == 'warning' %}⚠
+                                    {% else %}ℹ{% endif %}
+                                </span>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% block content %}{% endblock %}
+                </main>
+            </div>
+        {% else %}
+            {% block auth_content %}{% endblock %}
+        {% endif %}
+    </div>
+
+    <script>
+        // Toggle sidebar
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                
+                if (window.innerWidth <= 992) {
+                    sidebar.classList.toggle('mobile-active');
+                    mobileOverlay.classList.toggle('active');
+                }
+            });
+        }
+
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-active');
+                mobileOverlay.classList.remove('active');
+            });
+        }
+
+        // Toggle dropdowns en el sidebar - MEJORADO
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mantener abierto el dropdown si hay un sublink activo
+            document.querySelectorAll('.sidebar-submenu .sidebar-sublink').forEach(sublink => {
+                if (window.location.pathname.includes(new URL(sublink.href).pathname)) {
+                    const dropdown = sublink.closest('.sidebar-dropdown');
+                    if (dropdown) {
+                        dropdown.classList.add('open');
+                    }
+                }
+            });
+
+            // Toggle dropdowns al hacer click
+            document.querySelectorAll('.sidebar-dropdown > .sidebar-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const parent = link.parentElement;
+                    const isOpen = parent.classList.contains('open');
+                    
+                    // Cerrar todos los otros dropdowns
+                    document.querySelectorAll('.sidebar-dropdown.open').forEach(item => {
+                        if (item !== parent) {
+                            item.classList.remove('open');
+                        }
+                    });
+                    
+                    // Toggle el dropdown actual
+                    if (isOpen) {
+                        parent.classList.remove('open');
+                    } else {
+                        parent.classList.add('open');
+                    }
+                });
+            });
+        });
+
+        // Auto-cerrar alertas después de 5 segundos
+        document.querySelectorAll('.alert').forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

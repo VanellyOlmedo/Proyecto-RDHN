@@ -1,0 +1,224 @@
+{% extends 'core/base.html' %}
+{% block title %}Detalle Notificación{% endblock %}
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">🔔 Detalle de Notificación</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Banco</span>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-item">
+            <a href="{% url 'banco:notificaciones_listar' %}">Notificaciones</a>
+        </span>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-item active">Detalle</span>
+    </div>
+</div>
+
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <div class="card-header">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="font-size: 2rem;">
+                {% if notificacion.tipo == 'cuota_proxima' %}⏰
+                {% elif notificacion.tipo == 'cuota_vencida' %}⚠️
+                {% elif notificacion.tipo == 'prestamo_aprobado' %}✅
+                {% elif notificacion.tipo == 'prestamo_rechazado' %}❌
+                {% elif notificacion.tipo == 'dividendo_disponible' %}💰
+                {% else %}🔔
+                {% endif %}
+            </span>
+            <div>
+                <h2 class="card-title" style="margin: 0;">{{ notificacion.titulo }}</h2>
+                <p style="margin: 5px 0 0 0; color: var(--color-text-dim); font-size: 0.9rem;">
+                    {{ notificacion.creado_en|date:"d/m/Y H:i" }}
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            {% if not notificacion.leida %}
+                <a href="?marcar_leida=true" class="btn btn-success">✓ Marcar como leída</a>
+            {% endif %}
+            <a href="{% url 'banco:notificaciones_listar' %}" class="btn">← Volver</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="detail-grid">
+            <div class="detail-section">
+                <h3 class="section-title">Información General</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Estado:</span>
+                    <span class="detail-value">
+                        <span class="badge {% if notificacion.leida %}badge-success{% else %}badge-warning{% endif %}">
+                            {% if notificacion.leida %}Leída{% else %}No leída{% endif %}
+                        </span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Tipo:</span>
+                    <span class="detail-value">
+                        <span class="badge badge-info">{{ notificacion.get_tipo_display }}</span>
+                    </span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Destinatario:</span>
+                    <span class="detail-value"><strong>{{ notificacion.usuario.get_full_name }}</strong></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Fecha de Creación:</span>
+                    <span class="detail-value">{{ notificacion.creado_en|date:"d/m/Y H:i:s" }}</span>
+                </div>
+                {% if notificacion.leida %}
+                <div class="detail-row">
+                    <span class="detail-label">Fecha de Lectura:</span>
+                    <span class="detail-value">{{ notificacion.leida_en|date:"d/m/Y H:i:s" }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="detail-section full-width">
+                <h3 class="section-title">Mensaje</h3>
+                <div class="message-box">
+                    <p>{{ notificacion.mensaje }}</p>
+                </div>
+            </div>
+
+            {% if notificacion.prestamo or notificacion.cuota or notificacion.dividendo %}
+            <div class="detail-section full-width">
+                <h3 class="section-title">Referencias</h3>
+                
+                {% if notificacion.prestamo %}
+                <div class="reference-card">
+                    <div class="reference-icon">💳</div>
+                    <div class="reference-content">
+                        <h4>Préstamo Relacionado</h4>
+                        <p><strong>Código:</strong> {{ notificacion.prestamo.codigo_prestamo }}</p>
+                        <p><strong>Monto:</strong> L. {{ notificacion.prestamo.monto_solicitado|floatformat:2 }}</p>
+                        <p><strong>Estado:</strong> {{ notificacion.prestamo.estado.nombre }}</p>
+                    </div>
+                    <div class="reference-actions">
+                        <a href="{% url 'banco:prestamos_detalle' notificacion.prestamo.id %}" class="btn btn-sm btn-primary">
+                            Ver Préstamo
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if notificacion.cuota %}
+                <div class="reference-card">
+                    <div class="reference-icon">📅</div>
+                    <div class="reference-content">
+                        <h4>Cuota Relacionada</h4>
+                        <p><strong>Número:</strong> Cuota #{{ notificacion.cuota.numero_cuota }}</p>
+                        <p><strong>Monto:</strong> L. {{ notificacion.cuota.monto_cuota|floatformat:2 }}</p>
+                        <p><strong>Vencimiento:</strong> {{ notificacion.cuota.fecha_vencimiento|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="reference-actions">
+                        <a href="{% url 'banco:cuotas_detalle' notificacion.cuota.id %}" class="btn btn-sm btn-primary">
+                            Ver Cuota
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if notificacion.dividendo %}
+                <div class="reference-card">
+                    <div class="reference-icon">💰</div>
+                    <div class="reference-content">
+                        <h4>Dividendo Relacionado</h4>
+                        <p><strong>Período:</strong> {{ notificacion.dividendo.periodo.año }}</p>
+                        <p><strong>Monto:</strong> L. {{ notificacion.dividendo.monto_dividendo|floatformat:2 }}</p>
+                        <p><strong>Estado:</strong> {% if notificacion.dividendo.pagado %}Pagado{% else %}Pendiente{% endif %}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.detail-section {
+    background: var(--color-bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
+}
+.detail-section.full-width {
+    grid-column: 1 / -1;
+}
+.section-title {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 10px;
+}
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+.detail-row:last-child {
+    border-bottom: none;
+}
+.detail-label {
+    color: var(--color-text-dim);
+    font-weight: 500;
+}
+.detail-value {
+    color: var(--color-text);
+    font-weight: 600;
+    text-align: right;
+}
+.message-box {
+    background: var(--color-bg);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    line-height: 1.6;
+}
+.reference-card {
+    display: flex;
+    gap: 15px;
+    background: var(--color-bg);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    margin-bottom: 15px;
+}
+.reference-card:last-child {
+    margin-bottom: 0;
+}
+.reference-icon {
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-secondary);
+    border-radius: 50%;
+}
+.reference-content {
+    flex: 1;
+}
+.reference-content h4 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+}
+.reference-content p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+    color: var(--color-text-dim);
+}
+.reference-actions {
+    display: flex;
+    align-items: center;
+}
+</style>
+{% endblock %}

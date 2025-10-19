@@ -1,0 +1,93 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Verificación 2FA{% endblock %}
+
+{% block auth_content %}
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; width: 100%;">
+    <div class="card" style="max-width: 450px; width: 100%;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="font-size: 64px; margin-bottom: 20px;">🔐</div>
+            <h1 class="modal-title">Verificación en Dos Pasos</h1>
+            <p style="color: var(--color-text-dim); margin-top: 10px;">
+                Hemos enviado un código de 6 dígitos a<br>
+                <strong>{{ email_masked }}</strong>
+            </p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <span>
+                        {% if message.tags == 'success' %}✓
+                        {% elif message.tags == 'error' %}✕
+                        {% elif message.tags == 'warning' %}⚠
+                        {% else %}ℹ{% endif %}
+                    </span>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">Código de Verificación</label>
+                <input 
+                    type="text" 
+                    name="codigo" 
+                    class="form-input" 
+                    placeholder="000000"
+                    maxlength="6"
+                    pattern="[0-9]{6}"
+                    style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;"
+                    required
+                    autofocus
+                    autocomplete="off"
+                >
+                <small style="color: var(--color-text-dim); display: block; margin-top: 8px;">
+                    El código expira en 10 minutos
+                </small>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                <span>✓</span> Verificar Código
+            </button>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <p style="color: var(--color-text-dim); margin-bottom: 10px;">
+                    ¿No recibiste el código?
+                </p>
+                <a href="{% url 'core:reenviar_codigo_2fa' %}" class="btn btn-secondary">
+                    Reenviar Código
+                </a>
+            </div>
+
+            <div style="text-align: center; margin-top: 15px;">
+                <a href="{% url 'core:login' %}" style="color: var(--color-text-dim);">
+                    ← Volver al inicio de sesión
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Auto-submit cuando se ingresan 6 dígitos
+    document.querySelector('input[name="codigo"]').addEventListener('input', function(e) {
+        if (e.target.value.length === 6) {
+            // Pequeño delay para mejor UX
+            setTimeout(() => {
+                e.target.form.submit();
+            }, 300);
+        }
+    });
+    
+    // Solo permitir números
+    document.querySelector('input[name="codigo"]').addEventListener('keypress', function(e) {
+        if (!/[0-9]/.test(e.key)) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

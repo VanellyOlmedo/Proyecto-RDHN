@@ -1,0 +1,73 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Estados - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">⚙️ Gestión de Estados</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Configuración</span>
+        <span class="breadcrumb-item">Estados</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Estados</h2>
+        <a href="{% url 'core:estados_crear' %}" class="btn btn-primary">
+            <span>➕</span> Nuevo Estado
+        </a>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Dominio</th>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Es Final</th>
+                        <th>Orden</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for estado in estados %}
+                    <tr>
+                        <td>{{ estado.dominio }}</td>
+                        <td>{{ estado.codigo }}</td>
+                        <td>{{ estado.nombre }}</td>
+                        <td>
+                            {% if estado.es_final %}
+                                <span class="badge badge-success">Sí</span>
+                            {% else %}
+                                <span class="badge badge-info">No</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ estado.orden|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'core:estados_editar' estado.pk %}" class="btn btn-sm">
+                                ✏️ Editar
+                            </a>
+                            <form method="post" action="{% url 'core:estados_eliminar' estado.pk %}" style="display: inline;" onsubmit="return confirm('¿Está seguro?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-error">
+                                    🗑️ Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px;">
+                            No hay estados registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

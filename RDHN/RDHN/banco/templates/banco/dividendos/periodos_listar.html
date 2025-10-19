@@ -1,0 +1,41 @@
+{% extends 'core/base.html' %}
+{% block title %}Períodos de Dividendos{% endblock %}
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">📊 Períodos de Dividendos</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Banco</span>
+        <span class="breadcrumb-item">Dividendos</span>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Períodos</h2>
+        <a href="{% url 'banco:periodos_crear' %}" class="btn btn-primary">➕ Nuevo Período</a>
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr><th>Año</th><th>Fecha Inicio</th><th>Fecha Fin</th><th>Total Intereses</th><th>Total Distribuido</th><th>Estado</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    {% for periodo in periodos %}
+                    <tr>
+                        <td><strong>{{ periodo.año }}</strong></td>
+                        <td>{{ periodo.fecha_inicio|date:"d/m/Y" }}</td>
+                        <td>{{ periodo.fecha_fin|date:"d/m/Y" }}</td>
+                        <td style="font-weight: bold; color: var(--color-success);">L. {{ periodo.total_intereses_generados|floatformat:2 }}</td>
+                        <td style="font-weight: bold; color: var(--color-primary);">L. {{ periodo.total_distribuido|floatformat:2 }}</td>
+                        <td><span class="badge {% if periodo.estado == 'ABIERTO' %}badge-success{% elif periodo.estado == 'CERRADO' %}badge-warning{% else %}badge-info{% endif %}">{{ periodo.estado }}</span></td>
+                        <td><a href="{% url 'banco:dividendos_listar' periodo.pk %}" class="btn btn-sm">👁️ Ver Dividendos</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" style="text-align: center; padding: 40px;">No hay períodos registrados</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

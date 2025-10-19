@@ -1,0 +1,278 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Nuevo Usuario - Sistema de Gestión{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Select2 Container */
+    .select2-container {
+        width: 100% !important;
+    }
+    
+    /* Select2 Selection (el campo principal) */
+    .select2-container--default .select2-selection--single,
+    .select2-container--default .select2-selection--multiple {
+        border: 1px solid var(--color-border, #e5e7eb);
+        border-radius: 8px;
+        min-height: 42px;
+        padding: 6px 12px;
+        font-size: 14px;
+        background-color: var(--color-bg, #fff);
+        color: var(--color-text, #1f2937);
+        transition: all 0.2s ease;
+    }
+    
+    .select2-container--default .select2-selection--single {
+        padding: 8px 12px;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 26px;
+        color: var(--color-text, #1f2937);
+        padding-left: 0;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+        color: var(--color-text-dim, #9ca3af);
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px;
+        right: 6px;
+    }
+    
+    /* Select Multiple */
+    .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+        padding: 2px 4px;
+    }
+    
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: var(--color-primary, #6366f1);
+        border: none;
+        border-radius: 6px;
+        color: white;
+        padding: 4px 8px;
+        margin: 3px;
+    }
+    
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: white;
+        margin-right: 6px;
+        font-weight: bold;
+    }
+    
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+        color: #fee;
+    }
+    
+    /* Focus state */
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--focus .select2-selection--multiple,
+    .select2-container--default.select2-container--open .select2-selection--single,
+    .select2-container--default.select2-container--open .select2-selection--multiple {
+        border-color: var(--color-primary, #6366f1);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+    
+    /* Dropdown */
+    .select2-dropdown {
+        border: 1px solid var(--color-border, #e5e7eb);
+        border-radius: 8px;
+        background-color: var(--color-bg, #fff);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        margin-top: 4px;
+    }
+    
+    /* Search */
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        border: 1px solid var(--color-border, #e5e7eb);
+        border-radius: 6px;
+        padding: 8px 12px;
+        background-color: var(--color-bg, #fff);
+        color: var(--color-text, #1f2937);
+        font-size: 14px;
+    }
+    
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+        border-color: var(--color-primary, #6366f1);
+        outline: none;
+    }
+    
+    /* Results */
+    .select2-container--default .select2-results__option {
+        padding: 10px 12px;
+        color: var(--color-text, #1f2937);
+    }
+    
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: var(--color-primary, #6366f1);
+        color: white;
+    }
+    
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: rgba(99, 102, 241, 0.1);
+        color: var(--color-primary, #6366f1);
+    }
+    
+    /* Ocultar el select original */
+    .select2-hidden-accessible {
+        border: 0 !important;
+        clip: rect(0 0 0 0) !important;
+        height: 1px !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        position: absolute !important;
+        width: 1px !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">👤 Nuevo Usuario</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'core:usuarios_listar' %}">Usuarios</a></span>
+        <span class="breadcrumb-item">Nuevo</span>
+    </div>
+</div>
+
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">Información del Usuario</h2>
+    </div>
+    
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="alert alert-info">
+                <span>ℹ</span>
+                <span>Si deja la contraseña en blanco, se asignará una contraseña temporal "TemporalPass" y el usuario deberá cambiarla en su primer inicio de sesión.</span>
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Nombre de Usuario</label>
+                    {{ form.usuario }}
+                    {% if form.usuario.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.usuario.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.email.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Rol(es)</label>
+                    {{ form.roles }}
+                    {% if form.roles.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.roles.errors.0 }}</span>
+                    {% endif %}
+                    <small style="color: var(--color-text-dim);">Puede seleccionar múltiples roles</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Socio (Opcional)</label>
+                    {{ form.socio }}
+                    {% if form.socio.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.socio.errors.0 }}</span>
+                    {% endif %}
+                    <small style="color: var(--color-text-dim);">Vincular este usuario a un socio existente</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Contraseña</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.password.errors.0 }}</span>
+                {% endif %}
+                <small style="color: var(--color-text-dim);">{{ form.password.help_text }}</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Días para Expiración de Contraseña</label>
+                {{ form.password_expira_dias }}
+                {% if form.password_expira_dias.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.password_expira_dias.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        {{ form.is_active }}
+                        <span class="form-label" style="margin: 0;">Usuario Activo</span>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        {{ form.is_staff }}
+                        <span class="form-label" style="margin: 0;">Es Staff (Acceso Admin)</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span> Guardar
+                </button>
+                <a href="{% url 'core:usuarios_listar' %}" class="btn">
+                    <span>❌</span> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Inicializar Select2 para el campo de roles (múltiple)
+        $('#id_roles').select2({
+            placeholder: 'Selecciona uno o más roles',
+            allowClear: true,
+            language: {
+                noResults: function() {
+                    return "No se encontraron resultados";
+                },
+                searching: function() {
+                    return "Buscando...";
+                },
+                removeAllItems: function() {
+                    return "Eliminar todos los elementos";
+                }
+            },
+            width: '100%'
+        });
+        
+        // Inicializar Select2 para el campo de socio (simple)
+        $('#id_socio').select2({
+            placeholder: 'Seleccione un socio (opcional)',
+            allowClear: true,
+            language: {
+                noResults: function() {
+                    return "No se encontraron resultados";
+                },
+                searching: function() {
+                    return "Buscando...";
+                }
+            },
+            width: '100%'
+        });
+    });
+</script>
+{% endblock %}

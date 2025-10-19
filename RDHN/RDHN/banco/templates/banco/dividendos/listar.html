@@ -1,0 +1,115 @@
+{% extends 'core/base.html' %}
+{% block title %}Dividendos{% endblock %}
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">💰 Dividendos Distribuidos</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Banco</span>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-item active">Dividendos</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Filtrar Dividendos</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" class="filter-form">
+            <div class="grid grid-4">
+                <div class="form-group">
+                    <label class="form-label">Período</label>
+                    <select name="periodo" class="form-select">
+                        <option value="">Todos los períodos</option>
+                        {% for periodo in periodos %}
+                            <option value="{{ periodo.id }}" {% if request.GET.periodo == periodo.id|stringformat:"s" %}selected{% endif %}>
+                                {{ periodo.año }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Socio</label>
+                    <input type="text" name="socio" class="form-input" placeholder="Buscar socio..." value="{{ request.GET.socio }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="Pagado" {% if request.GET.estado == 'Pagado' %}selected{% endif %}>Pagado</option>
+                        <option value="Pendiente" {% if request.GET.estado == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">🔍 Buscar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Lista de Dividendos</h2>
+    </div>
+    <div class="card-body">
+        {% if dividendos %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Período</th>
+                            <th>Socio</th>
+                            <th>Saldo Promedio</th>
+                            <th>Préstamos</th>
+                            <th>Porcentaje</th>
+                            <th>Monto Dividendo</th>
+                            <th>Estado</th>
+                            <th>Fecha Pago</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dividendo in dividendos %}
+                        <tr>
+                            <td><strong>{{ dividendo.periodo.año }}</strong></td>
+                            <td>{{ dividendo.socio.get_full_name }}</td>
+                            <td>L. {{ dividendo.saldo_promedio|floatformat:2 }}</td>
+                            <td>{{ dividendo.cantidad_prestamos }}</td>
+                            <td>{{ dividendo.porcentaje_participacion|floatformat:2 }}%</td>
+                            <td><strong style="color: var(--color-success);">L. {{ dividendo.monto_dividendo|floatformat:2 }}</strong></td>
+                            <td>
+                                <span class="badge {% if dividendo.pagado %}badge-success{% else %}badge-warning{% endif %}">
+                                    {% if dividendo.pagado %}Pagado{% else %}Pendiente{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if dividendo.fecha_pago %}
+                                    {{ dividendo.fecha_pago|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span style="color: var(--color-text-dim);">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: var(--color-bg-secondary); font-weight: 600;">
+                            <td colspan="5">TOTAL DISTRIBUIDO</td>
+                            <td colspan="3">
+                                <strong style="color: var(--color-success); font-size: 1.1rem;">
+                                    L. {{ total_distribuido|floatformat:2|default:"0.00" }}
+                                </strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 40px; color: var(--color-text-dim);">
+                <div style="font-size: 3rem; margin-bottom: 10px;">💰</div>
+                <p>No hay dividendos registrados para los filtros seleccionados</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

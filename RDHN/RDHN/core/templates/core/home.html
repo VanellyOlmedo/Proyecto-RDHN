@@ -1,0 +1,150 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard - Red de Desarrollo Sostenible de Honduras{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">Dashboard</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Inicio</span>
+        <span class="breadcrumb-item">Dashboard</span>
+    </div>
+</div>
+
+<!-- Estadísticas principales -->
+<div class="grid grid-4">
+    <div class="card card-stat">
+        <div class="card-stat-icon">👥</div>
+        <div class="card-stat-value">247</div>
+        <div class="card-stat-label">Total Socios</div>
+        <div class="card-stat-change positive">↑ 15%</div>
+    </div>
+
+    <div class="card card-stat">
+        <div class="card-stat-icon">✓</div>
+        <div class="card-stat-value">189</div>
+        <div class="card-stat-label">Socios Activos</div>
+        <div class="card-stat-change positive">↑ 8%</div>
+    </div>
+
+    <div class="card card-stat">
+        <div class="card-stat-icon">👤</div>
+        <div class="card-stat-value">32</div>
+        <div class="card-stat-label">Usuarios Sistema</div>
+        <div class="card-stat-change positive">↑ 3%</div>
+    </div>
+
+    <div class="card card-stat">
+        <div class="card-stat-icon">📊</div>
+        <div class="card-stat-value">95%</div>
+        <div class="card-stat-label">Tasa Actividad</div>
+        <div class="card-stat-change negative">↓ 2%</div>
+    </div>
+</div>
+
+<!-- Gráficos y datos -->
+<div class="grid grid-2 mt-4">
+    <!-- Tabla de socios recientes -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Socios Recientes</h2>
+            <a href="#" class="btn btn-sm">Ver Todos</a>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Juan Pérez</td>
+                            <td>juan@email.com</td>
+                            <td><span class="badge badge-success">Activo</span></td>
+                        </tr>
+                        <tr>
+                            <td>María García</td>
+                            <td>maria@email.com</td>
+                            <td><span class="badge badge-success">Activo</span></td>
+                        </tr>
+                        <tr>
+                            <td>Carlos López</td>
+                            <td>carlos@email.com</td>
+                            <td><span class="badge badge-warning">Pendiente</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progreso y métricas -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Métricas del Sistema</h2>
+        </div>
+        <div class="card-body">
+            <div class="progress-label">
+                <span>Cuota de Socios</span>
+                <span>85%</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" style="width: 85%;">85%</div>
+            </div>
+
+            <div class="progress-label">
+                <span>Uso del Sistema</span>
+                <span>72%</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" style="width: 72%;">72%</div>
+            </div>
+
+            <div class="progress-label">
+                <span>Capacidad Usuarios</span>
+                <span>64%</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" style="width: 64%;">64%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas y notificaciones -->
+<div class="grid grid-3 mt-4">
+    <div class="card">
+        <div class="alert alert-info">
+            <span>ℹ</span>
+            <div>
+                <strong>Información:</strong> 
+                <p style="margin-top: 8px;">Sistema actualizado a la versión 2.0</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="alert alert-warning">
+            <span>⚠</span>
+            <div>
+                <strong>Atención:</strong> 
+                <p style="margin-top: 8px;">5 socios con cuotas pendientes</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="alert alert-success">
+            <span>✓</span>
+            <div>
+                <strong>Éxito:</strong> 
+                <p style="margin-top: 8px;">Backup completado correctamente</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

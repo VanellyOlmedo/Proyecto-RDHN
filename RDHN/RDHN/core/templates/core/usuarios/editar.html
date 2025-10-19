@@ -1,0 +1,105 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Editar Usuario - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">👤 Editar Usuario</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'core:usuarios_listar' %}">Usuarios</a></span>
+        <span class="breadcrumb-item">Editar</span>
+    </div>
+</div>
+
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">Editar: {{ usuario.usuario }}</h2>
+    </div>
+    
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="alert alert-warning">
+                <span>⚠</span>
+                <span>Si ingresa una nueva contraseña, la contraseña actual será reemplazada. Deje en blanco para mantener la contraseña actual.</span>
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Nombre de Usuario</label>
+                    {{ form.usuario }}
+                    {% if form.usuario.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.usuario.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.email.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                    <label class="form-label">Rol(es)</label>
+                    {{ form.roles }}
+                    {% if form.roles.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.roles.errors.0 }}</span>
+                    {% endif %}
+                    <small style="color: var(--color-text-dim);">Puede seleccionar múltiples roles</small>
+                </div>
+            <div class="form-group">
+                <label class="form-label">Socio (Opcional)</label>
+                {{ form.socio }}
+                {% if form.socio.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.socio.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Nueva Contraseña (opcional)</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.password.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Días para Expiración de Contraseña</label>
+                {{ form.password_expira_dias }}
+                {% if form.password_expira_dias.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.password_expira_dias.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        {{ form.is_active }}
+                        <span class="form-label" style="margin: 0;">Usuario Activo</span>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        {{ form.is_staff }}
+                        <span class="form-label" style="margin: 0;">Es Staff (Acceso Admin)</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span> Actualizar
+                </button>
+                <a href="{% url 'core:usuarios_listar' %}" class="btn">
+                    <span>❌</span> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

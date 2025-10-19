@@ -1,0 +1,13 @@
+argon2-cffi
+argon2-cffi-bindings
+asgiref
+cffi
+Django
+djangorestframework
+djangorestframework_simplejwt
+pycparser
+PyJWT
+python-dateutil
+six
+sqlparse
+tzdata

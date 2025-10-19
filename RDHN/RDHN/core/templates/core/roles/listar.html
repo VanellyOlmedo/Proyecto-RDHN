@@ -1,0 +1,71 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Roles - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">🔐 Gestión de Roles</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Roles</span>
+        <span class="breadcrumb-item">Listado</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Roles</h2>
+        <a href="{% url 'core:roles_crear' %}" class="btn btn-primary">
+            <span>➕</span> Nuevo Rol
+        </a>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre del Rol</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th>Usuarios</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rol in roles %}
+                    <tr>
+                        <td><strong>{{ rol.nombre_rol }}</strong></td>
+                        <td>{{ rol.descripcion|truncatewords:15|default:"-" }}</td>
+                        <td>
+                            {% if rol.estado %}
+                                <span class="badge badge-success">Activo</span>
+                            {% else %}
+                                <span class="badge badge-error">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ rol.usuarios.count }}</td>
+                        <td>
+                            <a href="{% url 'core:roles_editar' rol.pk %}" class="btn btn-sm">
+                                ✏️ Editar
+                            </a>
+                            <form method="post" action="{% url 'core:roles_eliminar' rol.pk %}" style="display: inline;" onsubmit="return confirm('¿Está seguro?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-error">
+                                    🗑️ Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px;">
+                            No hay roles registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

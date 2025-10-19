@@ -1,0 +1,105 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Nuevo Tipo de Cuenta - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">💼 Nuevo Tipo de Cuenta</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'banco:tipos_cuenta_listar' %}">Tipos de Cuenta</a></span>
+        <span class="breadcrumb-item">Nuevo</span>
+    </div>
+</div>
+
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">Información del Tipo de Cuenta</h2>
+    </div>
+    
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Código *</label>
+                    {{ form.codigo }}
+                    {% if form.codigo.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.codigo.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Nombre *</label>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.nombre.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Descripción</label>
+                {{ form.descripcion }}
+                {% if form.descripcion.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.descripcion.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Tasa de Interés Anual (%)</label>
+                    {{ form.tasa_interes_anual }}
+                    {% if form.tasa_interes_anual.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.tasa_interes_anual.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Monto Mínimo</label>
+                    {{ form.monto_minimo }}
+                    {% if form.monto_minimo.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.monto_minimo.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    {{ form.es_retirable }}
+                    <span class="form-label" style="margin: 0;">Es Retirable</span>
+                </label>
+                <small style="color: var(--color-text-dim); display: block; margin-top: 5px;">
+                    Indica si se pueden realizar retiros de esta cuenta
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    {{ form.requiere_deduccion_planilla }}
+                    <span class="form-label" style="margin: 0;">Requiere Deducción de Planilla</span>
+                </label>
+                <small style="color: var(--color-text-dim); display: block; margin-top: 5px;">
+                    Los aportes se deducen automáticamente de la planilla
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    {{ form.activo }}
+                    <span class="form-label" style="margin: 0;">Activo</span>
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span> Guardar
+                </button>
+                <a href="{% url 'banco:tipos_cuenta_listar' %}" class="btn">
+                    <span>❌</span> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
