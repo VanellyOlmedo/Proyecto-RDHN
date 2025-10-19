@@ -316,3 +316,220 @@ def cuentas_retirar(request, pk):
         'cuenta': cuenta
     })
 
+
+# ==========================================
+# CRUD TRANSACCIONES
+# ==========================================
+
+@login_required
+def transacciones_listar(request):
+    """Listar transacciones"""
+    transacciones = Transaccion.objects.all().select_related(
+        'cuenta_ahorro__socio', 'prestamo__socio', 'realizado_por'
+    ).order_by('-fecha_transaccion')[:100]
+    
+    # Filtros
+    tipo = request.GET.get('tipo')
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
+    
+    if tipo:
+        transacciones = transacciones.filter(tipo_transaccion=tipo)
+    if fecha_desde:
+        transacciones = transacciones.filter(fecha_transaccion__date__gte=fecha_desde)
+    if fecha_hasta:
+        transacciones = transacciones.filter(fecha_transaccion__date__lte=fecha_hasta)
+    
+    return render(request, 'banco/transacciones/listar.html', {
+        'transacciones': transacciones
+    })
+
+
+@login_required
+def transacciones_detalle(request, pk):
+    """Detalle de transacción"""
+    transaccion = get_object_or_404(Transaccion, pk=pk)
+    return render(request, 'banco/transacciones/detalle.html', {
+        'transaccion': transaccion
+    })
+
+
+# ==========================================
+# CRUD PRÉSTAMOS
+# ==========================================
+
+@login_required
+def prestamos_listar(request):
+    """Listar préstamos"""
+    prestamos = Prestamo.objects.all().select_related(
+        'socio', 'tipo_prestamo', 'aprobado_por'
+    ).order_by('-fecha_solicitud')
+    
+    # Filtros
+    estado = request.GET.get('estado')
+    socio_id = request.GET.get('socio')
+    
+    if estado:
+        prestamos = prestamos.filter(estado=estado)
+    if socio_id:
+        prestamos = prestamos.filter(socio_id=socio_id)
+    
+    context = {
+        'prestamos': prestamos,
+        'socios': Socio.objects.all(),
+    }
+    return render(request, 'banco/prestamos/listar.html', context)
+
+
+@login_required
+def prestamos_crear(request):
+    """Crear solicitud de préstamo"""
+    if request.method == 'POST':
+        form = PrestamoForm(request.POST, request.FILES)
+        if form.is_valid():
+            prestamo = form.save(commit=False)
+            prestamo.tasa_interes = prestamo.tipo_prestamo.tasa_interes_anual
+            prestamo.save()
+            
+            messages.success(
+                request,
+                f'Préstamo {prestamo.numero_prestamo} solicitado exitosamente'
+            )
+            return redirect('banco:prestamos_detalle', pk=prestamo.pk)
+    else:
+        form = PrestamoForm()
+    
+    return render(request, 'banco/prestamos/crear.html', {'form': form})
+
+
+@login_required
+def prestamos_detalle(request, pk):
+    """Detalle de préstamo"""
+    prestamo = get_object_or_404(
+        Prestamo.objects.select_related('socio', 'tipo_prestamo', 'aprobado_por'),
+        pk=pk
+    )
+    
+    cuotas = prestamo.cuotas.all().order_by('numero_cuota')
+    garantes = prestamo.garantes.filter(activo=True).select_related('socio_garante')
+    pagos = prestamo.pagos.all().order_by('-fecha_pago')[:10]
+    
+    context = {
+        'prestamo': prestamo,
+        'cuotas': cuotas,
+        'garantes': garantes,
+        'pagos': pagos,
+    }
+    return render(request, 'banco/prestamos/detalle.html', context)
+
+
+@login_required
+def prestamos_editar(request, pk):
+    """Editar préstamo"""
+    prestamo = get_object_or_404(Prestamo, pk=pk)
+    
+    # Solo se pueden editar préstamos en estado SOLICITADO
+    if prestamo.estado not in ['SOLICITADO', 'EN_REVISION']:
+        messages.error(request, 'Solo se pueden editar préstamos en estado Solicitado o En Revisión')
+        return redirect('banco:prestamos_detalle', pk=pk)
+    
+    if request.method == 'POST':
+        form = PrestamoForm(request.POST, request.FILES, instance=prestamo)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Préstamo actualizado correctamente')
+            return redirect('banco:prestamos_detalle', pk=prestamo.pk)
+    else:
+        form = PrestamoForm(instance=prestamo)
+    
+    return render(request, 'banco/prestamos/editar.html', {
+        'form': form,
+        'prestamo': prestamo
+    })
+
+
+@login_required
+def prestamos_aprobar(request, pk):
+    """Aprobar préstamo"""
+    prestamo = get_object_or_404(Prestamo, pk=pk)
+    
+    if prestamo.estado not in ['SOLICITADO', 'EN_REVISION']:
+        messages.error(request, 'Este préstamo no puede ser aprobado en su estado actual')
+        return redirect('banco:prestamos_detalle', pk=pk)
+    
+    if request.method == 'POST':
+        form = AprobarPrestamoForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    prestamo.monto_aprobado = form.cleaned_data['monto_aprobado']
+                    prestamo.fecha_primer_pago = form.cleaned_data['fecha_primer_pago']
+                    prestamo.fecha_aprobacion = timezone.now().date()
+                    prestamo.estado = 'APROBADO'
+                    prestamo.aprobado_por = request.user
+                    
+                    if form.cleaned_data.get('observaciones'):
+                        prestamo.observaciones = (
+                            prestamo.observaciones or ''
+                        ) + f"\n\nAprobación: {form.cleaned_data['observaciones']}"
+                    
+                    # Calcular cuota y generar tabla de amortización
+                    prestamo.calcular_cuota()
+                    prestamo.save()
+                    
+                    prestamo.generar_tabla_amortizacion()
+                    
+                    messages.success(
+                        request,
+                        f'Préstamo aprobado por L. {prestamo.monto_aprobado}. '
+                        f'Cuota mensual: L. {prestamo.cuota_mensual}'
+                    )
+                    return redirect('banco:prestamos_detalle', pk=prestamo.pk)
+            except Exception as e:
+                messages.error(request, f'Error al aprobar el préstamo: {str(e)}')
+    else:
+        form = AprobarPrestamoForm(initial={
+            'monto_aprobado': prestamo.monto_solicitado,
+            'fecha_primer_pago': timezone.now().date()
+        })
+    
+    return render(request, 'banco/prestamos/aprobar.html', {
+        'form': form,
+        'prestamo': prestamo
+    })
+
+
+@login_required
+def prestamos_rechazar(request, pk):
+    """Rechazar préstamo"""
+    prestamo = get_object_or_404(Prestamo, pk=pk)
+    
+    if prestamo.estado not in ['SOLICITADO', 'EN_REVISION']:
+        messages.error(request, 'Este préstamo no puede ser rechazado en su estado actual')
+        return redirect('banco:prestamos_detalle', pk=pk)
+    
+    if request.method == 'POST':
+        form = RechazarPrestamoForm(request.POST)
+        if form.is_valid():
+            prestamo.estado = 'RECHAZADO'
+            prestamo.observaciones = (
+                prestamo.observaciones or ''
+            ) + f"\n\nRechazo: {form.cleaned_data['motivo_rechazo']}"
+            prestamo.save()
+            
+            messages.success(request, 'Préstamo rechazado')
+            return redirect('banco:prestamos_detalle', pk=prestamo.pk)
+    else:
+        form = RechazarPrestamoForm()
+    
+    return render(request, 'banco/prestamos/rechazar.html', {
+        'form': form,
+        'prestamo': prestamo
+    })
+
+
+@login_required
+def prestamos_desembolsar(request, pk):
+    """Desembolsar préstamo aprobado"""
+    prestamo = get_object_or_404(Prestamo, pk=pk)
+    
