@@ -532,4 +532,313 @@ def prestamos_rechazar(request, pk):
 def prestamos_desembolsar(request, pk):
     """Desembolsar préstamo aprobado"""
     prestamo = get_object_or_404(Prestamo, pk=pk)
+
+    if prestamo.estado != 'APROBADO':
+        messages.error(request, 'Solo se pueden desembolsar préstamos aprobados')
+        return redirect('banco:prestamos_detalle', pk=pk)
     
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                prestamo.fecha_desembolso = timezone.now().date()
+                prestamo.estado = 'DESEMBOLSADO'
+                prestamo.save()
+                
+                # Registrar transacción de desembolso
+                Transaccion.objects.create(
+                    prestamo=prestamo,
+                    tipo_transaccion='DESEMBOLSO_PRESTAMO',
+                    monto=prestamo.monto_aprobado,
+                    descripcion=f'Desembolso del préstamo {prestamo.numero_prestamo}',
+                    realizado_por=request.user
+                )
+                
+                messages.success(
+                    request,
+                    f'Préstamo desembolsado por L. {prestamo.monto_aprobado}'
+                )
+                return redirect('banco:prestamos_detalle', pk=prestamo.pk)
+        except Exception as e:
+            messages.error(request, f'Error al desembolsar el préstamo: {str(e)}')
+    
+    return render(request, 'banco/prestamos/desembolsar.html', {
+        'prestamo': prestamo
+    })
+
+
+@login_required
+def prestamos_eliminar(request, pk):
+    """Eliminar préstamo"""
+    prestamo = get_object_or_404(Prestamo, pk=pk)
+    
+    # Solo se pueden eliminar préstamos no desembolsados
+    if prestamo.estado not in ['SOLICITADO', 'EN_REVISION', 'RECHAZADO']:
+        messages.error(
+            request,
+            'No se pueden eliminar préstamos aprobados o desembolsados'
+        )
+        return redirect('banco:prestamos_detalle', pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            numero = prestamo.numero_prestamo
+            prestamo.delete()
+            messages.success(request, f'Préstamo {numero} eliminado correctamente')
+            return redirect('banco:prestamos_listar')
+        except Exception as e:
+            messages.error(request, f'No se puede eliminar el préstamo: {str(e)}')
+    
+    return redirect('banco:prestamos_detalle', pk=pk)
+
+
+# ==========================================
+# GARANTES
+# ==========================================
+
+@login_required
+def garantes_agregar(request, prestamo_pk):
+    """Agregar garante a un préstamo"""
+    prestamo = get_object_or_404(Prestamo, pk=prestamo_pk)
+    
+    # Verificar que el préstamo requiera garantes
+    if not prestamo.tipo_prestamo.requiere_garantes:
+        messages.error(request, 'Este tipo de préstamo no requiere garantes')
+        return redirect('banco:prestamos_detalle', pk=prestamo.pk)
+    
+    # Verificar cantidad de garantes
+    garantes_actuales = prestamo.garantes.filter(activo=True).count()
+    if garantes_actuales >= prestamo.tipo_prestamo.cantidad_garantes:
+        messages.error(
+            request,
+            f'Ya se alcanzó el máximo de {prestamo.tipo_prestamo.cantidad_garantes} garantes'
+        )
+        return redirect('banco:prestamos_detalle', pk=prestamo.pk)
+    
+    if request.method == 'POST':
+        form = GaranteForm(request.POST, request.FILES, prestamo=prestamo)
+        if form.is_valid():
+            garante = form.save(commit=False)
+            garante.prestamo = prestamo
+            garante.save()
+            
+            messages.success(
+                request,
+                f'Garante {garante.socio_garante.nombre_completo} agregado correctamente'
+            )
+            return redirect('banco:prestamos_detalle', pk=prestamo.pk)
+    else:
+        form = GaranteForm(prestamo=prestamo)
+    
+    return render(request, 'banco/garantes/agregar.html', {
+        'form': form,
+        'prestamo': prestamo
+    })
+
+
+@login_required
+def garantes_eliminar(request, prestamo_pk, pk):
+    """Eliminar garante de un préstamo"""
+    garante = get_object_or_404(Garante, pk=pk, prestamo_id=prestamo_pk)
+    
+    if request.method == 'POST':
+        garante.activo = False
+        garante.save()
+        messages.success(request, 'Garante removido correctamente')
+    
+    return redirect('banco:prestamos_detalle', pk=prestamo_pk)
+
+
+# ==========================================
+# PAGOS DE PRÉSTAMOS
+# ==========================================
+
+@login_required
+def pagos_crear(request, prestamo_pk):
+    """Registrar pago de préstamo"""
+    prestamo = get_object_or_404(Prestamo, pk=prestamo_pk)
+    
+    if prestamo.estado not in ['DESEMBOLSADO', 'EN_PAGO']:
+        messages.error(request, 'Este préstamo no acepta pagos en su estado actual')
+        return redirect('banco:prestamos_detalle', pk=prestamo.pk)
+    
+    if request.method == 'POST':
+        form = PagoPrestamoForm(request.POST, prestamo=prestamo)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    pago = form.save(commit=False)
+                    pago.prestamo = prestamo
+                    pago.realizado_por = request.user
+                    
+                    # Si se especificó una cuota, distribuir el pago
+                    if pago.cuota:
+                        cuota = pago.cuota
+                        
+                        # Calcular mora si aplica
+                        if cuota.estado == 'VENCIDA':
+                            cuota.calcular_mora()
+                        
+                        total_cuota = (
+                            cuota.monto_cuota + cuota.monto_mora
+                        )
+                        
+                        if pago.monto_pagado >= total_cuota:
+                            # Pago completo
+                            pago.monto_capital = cuota.monto_capital
+                            pago.monto_interes = cuota.monto_interes
+                            pago.monto_mora = cuota.monto_mora
+                            
+                            cuota.fecha_pago = pago.fecha_pago
+                            cuota.estado = (
+                                'PAGADA' if cuota.dias_mora == 0 else 'PAGADA_TARDE'
+                            )
+                            cuota.save()
+                        else:
+                            # Pago parcial
+                            pago.monto_mora = min(pago.monto_pagado, cuota.monto_mora)
+                            restante = pago.monto_pagado - pago.monto_mora
+                            
+                            proporcion_interes = (
+                                cuota.monto_interes / cuota.monto_cuota
+                            )
+                            pago.monto_interes = restante * proporcion_interes
+                            pago.monto_capital = restante - pago.monto_interes
+                    
+                    pago.save()
+                    
+                    # Actualizar saldo del préstamo
+                    prestamo.saldo_pendiente -= pago.monto_pagado
+                    if prestamo.saldo_pendiente <= 0:
+                        prestamo.estado = 'PAGADO'
+                    elif prestamo.estado == 'DESEMBOLSADO':
+                        prestamo.estado = 'EN_PAGO'
+                    prestamo.save()
+                    
+                    # Registrar transacción
+                    Transaccion.objects.create(
+                        prestamo=prestamo,
+                        tipo_transaccion='PAGO_PRESTAMO',
+                        monto=pago.monto_pagado,
+                        descripcion=f'Pago de préstamo - Recibo {pago.numero_recibo}',
+                        numero_recibo=pago.numero_recibo,
+                        realizado_por=request.user
+                    )
+                    
+                    messages.success(
+                        request,
+                        f'Pago de L. {pago.monto_pagado} registrado correctamente'
+                    )
+                    return redirect('banco:prestamos_detalle', pk=prestamo.pk)
+            except Exception as e:
+                messages.error(request, f'Error al registrar el pago: {str(e)}')
+    else:
+        form = PagoPrestamoForm(prestamo=prestamo)
+    
+    return render(request, 'banco/pagos/crear.html', {
+        'form': form,
+        'prestamo': prestamo
+    })
+
+
+@login_required
+def pagos_detalle(request, pk):
+    """Detalle de un pago"""
+    pago = get_object_or_404(
+        PagoPrestamo.objects.select_related('prestamo', 'cuota', 'realizado_por'),
+        pk=pk
+    )
+    return render(request, 'banco/pagos/detalle.html', {'pago': pago})
+
+
+# ==========================================
+# DIVIDENDOS
+# ==========================================
+
+@login_required
+def periodos_listar(request):
+    """Listar períodos de dividendos"""
+    periodos = PeriodoDividendo.objects.all().order_by('-año')
+    return render(request, 'banco/dividendos/periodos_listar.html', {
+        'periodos': periodos
+    })
+
+
+@login_required
+def periodos_crear(request):
+    """Crear período de dividendos"""
+    if request.method == 'POST':
+        form = PeriodoDividendoForm(request.POST)
+        if form.is_valid():
+            periodo = form.save()
+            messages.success(request, f'Período {periodo.año} creado correctamente')
+            return redirect('banco:periodos_listar')
+    else:
+        form = PeriodoDividendoForm()
+    
+    return render(request, 'banco/dividendos/periodos_crear.html', {'form': form})
+
+
+@login_required
+def dividendos_listar(request, periodo_pk):
+    """Listar dividendos de un período"""
+    periodo = get_object_or_404(PeriodoDividendo, pk=periodo_pk)
+    dividendos = periodo.dividendos.all().select_related('socio').order_by(
+        '-monto_dividendo'
+    )
+    
+    return render(request, 'banco/dividendos/listar.html', {
+        'periodo': periodo,
+        'dividendos': dividendos
+    })
+
+
+# ==========================================
+# NOTIFICACIONES
+# ==========================================
+
+@login_required
+def notificaciones_listar(request):
+    """Listar notificaciones"""
+    notificaciones = Notificacion.objects.all().select_related(
+        'socio'
+    ).order_by('-creado_en')[:100]
+    
+    # Filtros
+    tipo = request.GET.get('tipo')
+    enviado = request.GET.get('enviado')
+    
+    if tipo:
+        notificaciones = notificaciones.filter(tipo=tipo)
+    if enviado:
+        notificaciones = notificaciones.filter(
+            enviado=(enviado == 'true')
+        )
+    
+    return render(request, 'banco/notificaciones/listar.html', {
+        'notificaciones': notificaciones
+    })
+
+
+@login_required
+def notificaciones_crear(request):
+    """Crear notificación"""
+    if request.method == 'POST':
+        form = NotificacionForm(request.POST)
+        if form.is_valid():
+            notificacion = form.save()
+            messages.success(request, 'Notificación creada correctamente')
+            return redirect('banco:notificaciones_listar')
+    else:
+        form = NotificacionForm()
+    
+    return render(request, 'banco/notificaciones/crear.html', {'form': form})
+
+
+@login_required
+def notificaciones_detalle(request, pk):
+    """Detalle de notificación"""
+    notificacion = get_object_or_404(Notificacion, pk=pk)
+    return render(request, 'banco/notificaciones/detalle.html', {
+        'notificacion': notificacion
+    })
+
