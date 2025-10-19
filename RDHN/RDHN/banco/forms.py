@@ -498,3 +498,103 @@ class PeriodoDividendoForm(forms.ModelForm):
         cleaned_data = super().clean()
         fecha_inicio = cleaned_data.get('fecha_inicio')
         fecha_fin = cleaned_data.get('fecha_fin')
+        
+        if fecha_inicio and fecha_fin and fecha_inicio >= fecha_fin:
+            raise ValidationError(
+                'La fecha de inicio debe ser anterior a la fecha de fin'
+            )
+
+        return cleaned_data
+
+
+class DividendoForm(forms.ModelForm):
+    class Meta:
+        model = Dividendo
+        fields = [
+            'periodo', 'socio', 'saldo_promedio_fijo', 'cantidad_prestamos',
+            'cumple_requisito', 'porcentaje_asignado', 'monto_dividendo',
+            'fecha_acreditacion', 'acreditado'
+        ]
+        widgets = {
+            'periodo': forms.Select(attrs={'class': 'form-select'}),
+            'socio': forms.Select(attrs={
+                'class': 'form-select select2-single',
+                'data-placeholder': 'Seleccione un socio'
+            }),
+            'saldo_promedio_fijo': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'step': '0.01',
+                'readonly': 'readonly'
+            }),
+            'cantidad_prestamos': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'readonly': 'readonly'
+            }),
+            'porcentaje_asignado': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'step': '0.01',
+                'readonly': 'readonly'
+            }),
+            'monto_dividendo': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'step': '0.01',
+                'readonly': 'readonly'
+            }),
+            'fecha_acreditacion': forms.DateInput(attrs={
+                'class': 'form-input',
+                'type': 'date'
+            }),
+        }
+
+
+class NotificacionForm(forms.ModelForm):
+    class Meta:
+        model = Notificacion
+        fields = ['socio', 'tipo', 'asunto', 'mensaje']
+        widgets = {
+            'socio': forms.Select(attrs={
+                'class': 'form-select select2-single',
+                'data-placeholder': 'Seleccione un socio'
+            }),
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'asunto': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Asunto de la notificación'
+            }),
+            'mensaje': forms.Textarea(attrs={
+                'class': 'form-textarea',
+                'rows': 4,
+                'placeholder': 'Mensaje de la notificación'
+            }),
+        }
+
+
+class DepositoRetiroForm(forms.Form):
+    """Formulario para realizar depósitos y retiros"""
+    monto = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        min_value=Decimal('0.01'),
+        widget=forms.NumberInput(attrs={
+            'class': 'form-input',
+            'step': '0.01',
+            'placeholder': '0.00'
+        }),
+        label='Monto'
+    )
+    descripcion = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-textarea',
+            'rows': 3,
+            'placeholder': 'Descripción de la operación'
+        }),
+        label='Descripción'
+    )
+    numero_recibo = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Número de recibo (opcional)'
+        }),
+        label='Número de Recibo'
+    )
