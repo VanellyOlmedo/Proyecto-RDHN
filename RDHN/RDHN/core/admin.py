@@ -57,4 +57,39 @@ class UsuarioAdmin(admin.ModelAdmin):
     search_fields = ['usuario', 'email', 'socio__numero_socio', 'socio__primer_nombre', 'socio__primer_apellido']
     ordering = ['-creado_en']
     
+    inlines = [UsuarioRolInline]
     
+    fieldsets = (
+        ('Información de Autenticación', {
+            'fields': ('usuario', 'email', 'password', 'socio')
+        }),
+        ('Permisos', {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+        }),
+        ('Seguridad', {
+            'fields': ('requiere_cambio_password', 'password_expira_dias', 'intentos_fallidos', 'bloqueado_hasta')
+        }),
+        ('Estado', {
+            'fields': ('id_estado',)
+        }),
+        ('Fechas Importantes', {
+            'fields': ('ultimo_acceso', 'password_updated_at', 'creado_en', 'actualizado_en'),
+        }),
+    )
+    
+    readonly_fields = ['creado_en', 'actualizado_en', 'ultimo_acceso', 'password_updated_at']
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('socio', 'id_estado')
+
+@admin.register(UsuarioRol)
+class UsuarioRolAdmin(admin.ModelAdmin):
+    list_display = ['usuario', 'rol', 'fecha_asignacion', 'fecha_revocacion', 'estado', 'asignado_por']
+    list_filter = ['estado', 'fecha_asignacion']
+    search_fields = ['usuario__usuario', 'rol__nombre_rol']
+    ordering = ['-fecha_asignacion']
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('usuario', 'rol', 'asignado_por')
