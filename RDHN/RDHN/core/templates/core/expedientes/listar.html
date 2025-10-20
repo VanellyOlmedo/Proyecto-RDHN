@@ -1,0 +1,72 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Expedientes - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">📂 Expedientes Digitales</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Expedientes</span>
+        <span class="breadcrumb-item">Listado</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Expedientes</h2>
+        <a href="{% url 'core:expedientes_crear' %}" class="btn btn-primary">
+            <span>➕</span> Nuevo Expediente
+        </a>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Socio</th>
+                        <th>Fecha Creación</th>
+                        <th>Observaciones</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expediente in expedientes %}
+                    <tr>
+                        <td><strong>{{ expediente.numero_expediente }}</strong></td>
+                        <td>
+                            <a href="{% url 'core:socios_detalle' expediente.socio.pk %}">
+                                {{ expediente.socio.nombre_completo }}
+                            </a>
+                        </td>
+                        <td>{{ expediente.fecha_creacion|date:"d/m/Y" }}</td>
+                        <td>{{ expediente.observaciones|truncatewords:10|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'core:socios_detalle' expediente.socio.pk %}" class="btn btn-sm">
+                                👁️ Ver Socio
+                            </a>
+                            <a href="{% url 'core:expedientes_editar' expediente.pk %}" class="btn btn-sm">
+                                ✏️ Editar
+                            </a>
+                            <form method="post" action="{% url 'core:expedientes_eliminar' expediente.pk %}" style="display: inline;" onsubmit="return confirm('¿Está seguro?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-error">
+                                    🗑️ Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px;">
+                            No hay expedientes registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
