@@ -1,0 +1,166 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ socio.nombre_completo }} - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">👤 {{ socio.nombre_completo }}</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'core:socios_listar' %}">Socios</a></span>
+        <span class="breadcrumb-item">{{ socio.numero_socio }}</span>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <!-- Información Personal -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Información Personal</h2>
+            <a href="{% url 'core:socios_editar' socio.pk %}" class="btn btn-sm">
+                ✏️ Editar
+            </a>
+        </div>
+        <div class="card-body">
+            <div style="margin-bottom: 15px;">
+                <strong style="color: var(--color-text-dim);">Número de Socio:</strong>
+                <p style="margin: 5px 0;">{{ socio.numero_socio }}</p>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: var(--color-text-dim);">Identidad:</strong>
+                <p style="margin: 5px 0;">{{ socio.identidad }}</p>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: var(--color-text-dim);">Nombre Completo:</strong>
+                <p style="margin: 5px 0;">{{ socio.nombre_completo }}</p>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: var(--color-text-dim);">Dirección:</strong>
+                <p style="margin: 5px 0;">{{ socio.direccion|default:"No registrada" }}</p>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: var(--color-text-dim);">Fecha de Ingreso:</strong>
+                <p style="margin: 5px 0;">{{ socio.fecha_ingreso|date:"d/m/Y" }}</p>
+            </div>
+            
+            {% if socio.fecha_egreso %}
+            <div style="margin-bottom: 15px;">
+                <strong style="color: var(--color-text-dim);">Fecha de Egreso:</strong>
+                <p style="margin: 5px 0;">{{ socio.fecha_egreso|date:"d/m/Y" }}</p>
+            </div>
+            {% endif %}
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: var(--color-text-dim);">Estado:</strong>
+                <p style="margin: 5px 0;">
+                    {% if socio.id_estado %}
+                        <span class="badge badge-info">{{ socio.id_estado.nombre }}</span>
+                    {% else %}
+                        <span class="badge badge-warning">Sin estado</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expediente Digital -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Expediente Digital</h2>
+            {% if not expediente %}
+            <a href="{% url 'core:expedientes_crear' %}?socio={{ socio.pk }}" class="btn btn-sm btn-primary">
+                ➕ Crear
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if expediente %}
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: var(--color-text-dim);">Número de Expediente:</strong>
+                    <p style="margin: 5px 0;">{{ expediente.numero_expediente }}</p>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: var(--color-text-dim);">Fecha de Creación:</strong>
+                    <p style="margin: 5px 0;">{{ expediente.fecha_creacion|date:"d/m/Y" }}</p>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: var(--color-text-dim);">Observaciones:</strong>
+                    <p style="margin: 5px 0;">{{ expediente.observaciones|default:"Sin observaciones" }}</p>
+                </div>
+                
+                <a href="{% url 'core:expedientes_editar' expediente.pk %}" class="btn btn-sm">
+                    ✏️ Editar Expediente
+                </a>
+            {% else %}
+                <p style="text-align: center; color: var(--color-text-dim); padding: 20px;">
+                    No tiene expediente digital creado
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Contactos -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+        <h2 class="card-title">📞 Contactos</h2>
+        <a href="{% url 'core:contactos_crear' socio.pk %}" class="btn btn-sm btn-primary">
+            ➕ Agregar Contacto
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Preferido</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contacto in contactos %}
+                    <tr>
+                        <td>
+                            {% if contacto.tipo == 'TELEFONO' %}📱
+                            {% elif contacto.tipo == 'EMAIL' %}📧
+                            {% else %}📍{% endif %}
+                            {{ contacto.get_tipo_display }}
+                        </td>
+                        <td>{{ contacto.valor }}</td>
+                        <td>
+                            {% if contacto.preferido %}
+                                <span class="badge badge-success">Sí</span>
+                            {% else %}
+                                <span class="badge">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'core:contactos_editar' socio.pk contacto.pk %}" class="btn btn-sm">
+                                ✏️
+                            </a>
+                            <form method="post" action="{% url 'core:contactos_eliminar' socio.pk contacto.pk %}" style="display: inline;" onsubmit="return confirm('¿Eliminar este contacto?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-error">🗑️</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 30px;">
+                            No hay contactos registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
