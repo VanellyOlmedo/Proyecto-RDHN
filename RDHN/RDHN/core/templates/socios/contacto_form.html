@@ -1,0 +1,65 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ accion }} Contacto - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">📞 {{ accion }} Contacto</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'core:socios_listar' %}">Socios</a></span>
+        <span class="breadcrumb-item"><a href="{% url 'core:socios_detalle' socio.pk %}">{{ socio.nombre_completo }}</a></span>
+        <span class="breadcrumb-item">{{ accion }} Contacto</span>
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">{{ accion }} Contacto para {{ socio.nombre_completo }}</h2>
+    </div>
+    
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">Tipo de Contacto</label>
+                {{ form.tipo }}
+                {% if form.tipo.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.tipo.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Valor</label>
+                {{ form.valor }}
+                {% if form.valor.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.valor.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    {{ form.preferido }}
+                    <span class="form-label" style="margin: 0;">Marcar como preferido</span>
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    {{ form.activo }}
+                    <span class="form-label" style="margin: 0;">Activo</span>
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span> Guardar
+                </button>
+                <a href="{% url 'core:socios_detalle' socio.pk %}" class="btn">
+                    <span>❌</span> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

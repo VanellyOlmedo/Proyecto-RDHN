@@ -1,0 +1,92 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Transacciones - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">💸 Transacciones</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Banco</span>
+        <span class="breadcrumb-item">Transacciones</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Transacciones (Últimas 100)</h2>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Cuenta/Préstamo</th>
+                        <th>Descripción</th>
+                        <th>Monto</th>
+                        <th>Saldo</th>
+                        <th>Realizado Por</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaccion in transacciones %}
+                    <tr>
+                        <td>{{ transaccion.fecha_transaccion|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if transaccion.tipo_transaccion == 'DEPOSITO' %}
+                                <span class="badge badge-success">{{ transaccion.get_tipo_transaccion_display }}</span>
+                            {% elif transaccion.tipo_transaccion == 'RETIRO' %}
+                                <span class="badge badge-error">{{ transaccion.get_tipo_transaccion_display }}</span>
+                            {% else %}
+                                <span class="badge badge-info">{{ transaccion.get_tipo_transaccion_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaccion.cuenta_ahorro %}
+                                <a href="{% url 'banco:cuentas_detalle' transaccion.cuenta_ahorro.pk %}">
+                                    {{ transaccion.cuenta_ahorro.numero_cuenta }}
+                                </a>
+                                <br><small style="color: var(--color-text-dim);">
+                                    {{ transaccion.cuenta_ahorro.socio.nombre_completo }}
+                                </small>
+                            {% elif transaccion.prestamo %}
+                                {{ transaccion.prestamo.numero_prestamo }}
+                                <br><small style="color: var(--color-text-dim);">
+                                    {{ transaccion.prestamo.socio.nombre_completo }}
+                                </small>
+                            {% endif %}
+                        </td>
+                        <td>{{ transaccion.descripcion|truncatewords:8 }}</td>
+                        <td style="{% if 'DEPOSITO' in transaccion.tipo_transaccion or 'PAGO' in transaccion.tipo_transaccion %}color: var(--color-success);{% else %}color: var(--color-error);{% endif %} font-weight: bold;">
+                            L. {{ transaccion.monto|floatformat:2 }}
+                        </td>
+                        <td>
+                            {% if transaccion.saldo_nuevo %}
+                                L. {{ transaccion.saldo_nuevo|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ transaccion.realizado_por.get_full_name|default:transaccion.realizado_por.usuario }}</td>
+                        <td>
+                            <a href="{% url 'banco:transacciones_detalle' transaccion.pk %}" class="btn btn-sm">
+                                👁️ Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            No hay transacciones registradas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

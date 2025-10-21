@@ -1,0 +1,89 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Tipos de Cuenta - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">💼 Tipos de Cuenta</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Banco</span>
+        <span class="breadcrumb-item">Configuración</span>
+        <span class="breadcrumb-item">Tipos de Cuenta</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Tipos de Cuenta</h2>
+        <a href="{% url 'banco:tipos_cuenta_crear' %}" class="btn btn-primary">
+            <span>➕</span> Nuevo Tipo de Cuenta
+        </a>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Tasa Interés Anual</th>
+                        <th>Monto Mínimo</th>
+                        <th>Características</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tipo in tipos %}
+                    <tr>
+                        <td><strong>{{ tipo.codigo }}</strong></td>
+                        <td>{{ tipo.nombre }}</td>
+                        <td>{{ tipo.descripcion|truncatewords:10|default:"-" }}</td>
+                        <td style="font-weight: bold; color: var(--color-success);">
+                            {{ tipo.tasa_interes_anual }}%
+                        </td>
+                        <td>L. {{ tipo.monto_minimo|floatformat:2 }}</td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                {% if tipo.es_retirable %}
+                                    <span class="badge badge-success" style="font-size: 10px;">Retirable</span>
+                                {% endif %}
+                                {% if tipo.requiere_deduccion_planilla %}
+                                    <span class="badge badge-info" style="font-size: 10px;">Planilla</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if tipo.activo %}
+                                <span class="badge badge-success">Activo</span>
+                            {% else %}
+                                <span class="badge badge-error">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'banco:tipos_cuenta_editar' tipo.pk %}" class="btn btn-sm">
+                                ✏️ Editar
+                            </a>
+                            <form method="post" action="{% url 'banco:tipos_cuenta_eliminar' tipo.pk %}" style="display: inline;" onsubmit="return confirm('¿Está seguro de eliminar este tipo de cuenta?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-error">
+                                    🗑️
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            No hay tipos de cuenta registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

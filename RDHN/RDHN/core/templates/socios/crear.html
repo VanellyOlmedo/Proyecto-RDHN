@@ -1,0 +1,185 @@
+{% extends 'core/base.html' %}
+
+{% block title %}
+    {% if socio %}Editar Socio{% else %}Nuevo Socio{% endif %} - Sistema de Gestión
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">
+        👥 {% if socio %}Editar Socio{% else %}Nuevo Socio{% endif %}
+    </h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'core:socios_listar' %}">Socios</a></span>
+        <span class="breadcrumb-item">{% if socio %}Editar{% else %}Nuevo{% endif %}</span>
+    </div>
+</div>
+
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">Información del Socio</h2>
+    </div>
+    
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if not socio %}
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                <span>El número de socio se genera automáticamente y es único para cada socio.</span>
+            </div>
+            {% endif %}
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">
+                        Número de Socio 
+                        <span style="color: var(--color-success); font-size: 12px;">●</span>
+                    </label>
+                    {{ form.numero_socio }}
+                    {% if form.numero_socio.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.numero_socio.errors.0 }}</span>
+                    {% endif %}
+                    <small style="color: var(--color-text-dim);">Generado automáticamente</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Identidad</label>
+                    {{ form.identidad }}
+                    {% if form.identidad.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.identidad.errors.0 }}</span>
+                    {% endif %}
+                    <small style="color: var(--color-text-dim);">Formato: 0801-1990-12345</small>
+                </div>
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Primer Nombre</label>
+                    {{ form.primer_nombre }}
+                    {% if form.primer_nombre.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.primer_nombre.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Segundo Nombre</label>
+                    {{ form.segundo_nombre }}
+                    {% if form.segundo_nombre.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.segundo_nombre.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Primer Apellido</label>
+                    {{ form.primer_apellido }}
+                    {% if form.primer_apellido.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.primer_apellido.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Segundo Apellido</label>
+                    {{ form.segundo_apellido }}
+                    {% if form.segundo_apellido.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.segundo_apellido.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Dirección</label>
+                {{ form.direccion }}
+                {% if form.direccion.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.direccion.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Fecha de Ingreso</label>
+                    {{ form.fecha_ingreso }}
+                    {% if form.fecha_ingreso.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.fecha_ingreso.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Fecha de Egreso</label>
+                    {{ form.fecha_egreso }}
+                    {% if form.fecha_egreso.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.fecha_egreso.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Estado</label>
+                {{ form.id_estado }}
+                {% if form.id_estado.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.id_estado.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span> Guardar
+                </button>
+                <a href="{% url 'core:socios_listar' %}" class="btn">
+                    <span>❌</span> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const identidadInput = document.querySelector('.identidad-input');
+    
+    if (identidadInput) {
+        // Formatear mientras el usuario escribe
+        identidadInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Solo números
+            let formattedValue = '';
+            
+            // Aplicar formato xxxx-xxxx-xxxxx
+            if (value.length > 0) {
+                formattedValue = value.substring(0, 4);
+            }
+            if (value.length > 4) {
+                formattedValue += '-' + value.substring(4, 8);
+            }
+            if (value.length > 8) {
+                formattedValue += '-' + value.substring(8, 13);
+            }
+            
+            e.target.value = formattedValue;
+        });
+        
+        // Formatear al cargar si ya tiene valor
+        if (identidadInput.value) {
+            let value = identidadInput.value.replace(/\D/g, '');
+            let formattedValue = '';
+            
+            if (value.length > 0) {
+                formattedValue = value.substring(0, 4);
+            }
+            if (value.length > 4) {
+                formattedValue += '-' + value.substring(4, 8);
+            }
+            if (value.length > 8) {
+                formattedValue += '-' + value.substring(8, 13);
+            }
+            
+            identidadInput.value = formattedValue;
+        }
+    }
+});
+</script>
+{% endblock %}
