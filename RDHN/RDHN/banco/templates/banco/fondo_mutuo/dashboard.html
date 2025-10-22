@@ -1,0 +1,209 @@
+{% extends 'core/base.html' %}
+{% block title %}Dashboard Fondo Mutuo - Sistema de Gestión{% endblock %}
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">🤝 Dashboard Fondo Mutuo</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Fondo Mutuo</span>
+        <span class="breadcrumb-item">Dashboard</span>
+    </div>
+</div>
+{% if not periodo_actual %}
+<div class="alert alert-warning">
+    <span>⚠</span>
+    <div>
+        <strong>No hay período activo</strong>
+        <p>No existe un fondo activo para el período actual. Debes crear uno para comenzar a operar.</p>
+        <a href="{% url 'fondo_mutuo:fondos_crear_actual' %}" class="btn btn-primary btn-sm" style="margin-top: 10px;">
+            Crear Fondo del Período Actual
+        </a>
+    </div>
+</div>
+{% endif %}
+{% if periodo_actual %}
+<!-- Información del Período Actual -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">📅 Período Actual: {{ periodo_actual }}</h2>
+        <div style="display: flex; gap: 10px;">
+            {% if periodo_actual.esta_abierto %}
+                <span class="badge badge-success">ABIERTO</span>
+            {% else %}
+                <span class="badge badge-error">CERRADO</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-3">
+            <div>
+                <strong style="color: var(--color-text-dim);">Fecha Inicio:</strong>
+                <p style="font-size: 18px; margin-top: 5px;">{{ periodo_actual.fecha_inicio|date:"d/m/Y" }}</p>
+            </div>
+            <div>
+                <strong style="color: var(--color-text-dim);">Fecha Fin:</strong>
+                <p style="font-size: 18px; margin-top: 5px;">{{ periodo_actual.fecha_fin|date:"d/m/Y" }}</p>
+            </div>
+            <div>
+                {% if periodo_actual.fecha_cierre %}
+                <strong style="color: var(--color-text-dim);">Fecha Cierre:</strong>
+                <p style="font-size: 18px; margin-top: 5px;">{{ periodo_actual.fecha_cierre|date:"d/m/Y" }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Estadísticas del Período -->
+{% if stats_periodo %}
+<div class="grid grid-4" style="margin-top: 30px;">
+    <div class="card card-stat">
+        <div class="card-stat-icon" style="color: var(--color-success);">💰</div>
+        <div class="card-stat-value">L. {{ stats_periodo.total_ingresos|floatformat:2 }}</div>
+        <div class="card-stat-label">Total Ingresos</div>
+        <div class="card-stat-change" style="color: var(--color-text-dim); font-size: 13px; margin-top: 8px;">
+            {{ stats_periodo.total_aportes }} aportes registrados
+        </div>
+    </div>
+<div class="card card-stat">
+    <div class="card-stat-icon" style="color: var(--color-error);">💸</div>
+    <div class="card-stat-value">L. {{ stats_periodo.total_egresos|floatformat:2 }}</div>
+    <div class="card-stat-label">Total Egresos</div>
+    <div class="card-stat-change" style="color: var(--color-text-dim); font-size: 13px; margin-top: 8px;">
+        {{ stats_periodo.total_ayudas }} ayudas otorgadas
+    </div>
+</div>
+
+<div class="card card-stat">
+    <div class="card-stat-icon" style="color: var(--color-secondary);">💵</div>
+    <div class="card-stat-value">L. {{ stats_periodo.saldo_disponible|floatformat:2 }}</div>
+    <div class="card-stat-label">Saldo Disponible</div>
+</div>
+
+<div class="card card-stat">
+    <div class="card-stat-icon" style="color: var(--color-warning);">⏳</div>
+    <div class="card-stat-value">{{ solicitudes_pendientes }}</div>
+    <div class="card-stat-label">Solicitudes Pendientes</div>
+    {% if solicitudes_pendientes > 0 %}
+    <a href="{% url 'fondo_mutuo:solicitudes_pendientes' %}" class="btn btn-sm btn-primary" style="margin-top: 10px;">
+        Ver Solicitudes
+    </a>
+    {% endif %}
+</div>
+</div>
+{% endif %}
+<!-- Acciones Rápidas -->
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h2 class="card-title">⚡ Acciones Rápidas</h2>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-4">
+            <a href="{% url 'fondo_mutuo:aportes_crear' %}" class="btn btn-primary btn-block">
+                <span>💰</span> Registrar Aporte
+            </a>
+            <a href="{% url 'fondo_mutuo:solicitudes_crear' %}" class="btn btn-block">
+                <span>📝</span> Nueva Solicitud
+            </a>
+            <a href="{% url 'fondo_mutuo:solicitudes_pendientes' %}" class="btn btn-block">
+                <span>⏳</span> Revisar Solicitudes
+            </a>
+            <a href="{% url 'fondo_mutuo:movimientos_listar' %}" class="btn btn-block">
+                <span>📊</span> Ver Movimientos
+            </a>
+        </div>
+    </div>
+</div>
+<!-- Últimos Movimientos -->
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h2 class="card-title">📝 Últimos Movimientos</h2>
+        <a href="{% url 'fondo_mutuo:movimientos_listar' %}" class="btn btn-sm">
+            Ver Todos
+        </a>
+    </div>
+    <div class="card-body">
+        {% if ultimos_movimientos %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Número</th>
+                        <th>Socio</th>
+                        <th>Tipo</th>
+                        <th>Concepto</th>
+                        <th>Monto</th>
+                        <th>Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in ultimos_movimientos %}
+                    <tr>
+                        <td>{{ mov.fecha_movimiento|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'fondo_mutuo:movimientos_detalle' mov.pk %}">
+                                {{ mov.numero_movimiento }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if mov.socio %}
+                                {{ mov.socio.nombre_completo }}
+                            {% else %}
+                                <span style="color: var(--color-text-dim);">Sistema</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mov.origen == 'INGRESO' %}
+                                <span class="badge badge-success">{{ mov.get_origen_display }}</span>
+                            {% elif mov.origen == 'EGRESO' %}
+                                <span class="badge badge-error">{{ mov.get_origen_display }}</span>
+                            {% else %}
+                                <span class="badge badge-info">{{ mov.get_origen_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ mov.concepto|truncatewords:8 }}</td>
+                        <td style="{% if mov.origen == 'INGRESO' %}color: var(--color-success);{% else %}color: var(--color-error);{% endif %} font-weight: bold;">
+                            {% if mov.origen == 'INGRESO' %}+{% else %}-{% endif %}L. {{ mov.monto|floatformat:2 }}
+                        </td>
+                        <td>L. {{ mov.saldo_nuevo|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="text-align: center; padding: 40px; color: var(--color-text-dim);">
+            No hay movimientos registrados
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+<!-- Estadísticas Históricas -->
+{% if stats_historicas %}
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h2 class="card-title">📊 Estadísticas Históricas</h2>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-2">
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 36px; color: var(--color-secondary); margin-bottom: 10px;">
+                    {{ stats_historicas.total_fondos }}
+                </div>
+                <div style="color: var(--color-text-dim); text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">
+                    Períodos Registrados
+                </div>
+            </div>
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 36px; color: var(--color-primary); margin-bottom: 10px;">
+                    L. {{ stats_historicas.total_acumulado|floatformat:2|default:"0.00" }}
+                </div>
+                <div style="color: var(--color-text-dim); text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">
+                    Saldo Total Acumulado
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
