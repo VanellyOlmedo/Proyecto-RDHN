@@ -1,0 +1,105 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Retirar - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">💸 Realizar Retiro</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'banco:cuentas_listar' %}">Cuentas</a></span>
+        <span class="breadcrumb-item"><a href="{% url 'banco:cuentas_detalle' cuenta.pk %}">{{ cuenta.numero_cuenta }}</a></span>
+        <span class="breadcrumb-item">Retirar</span>
+    </div>
+</div>
+
+<div class="grid grid-2" style="align-items: start;">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Información del Retiro</h2>
+        </div>
+        
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="alert alert-warning">
+                    <span>⚠</span>
+                    <span>Verifique que el saldo sea suficiente antes de realizar el retiro.</span>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Monto a Retirar *</label>
+                    {{ form.monto }}
+                    {% if form.monto.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.monto.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Descripción *</label>
+                    {{ form.descripcion }}
+                    {% if form.descripcion.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.descripcion.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Número de Recibo (Opcional)</label>
+                    {{ form.numero_recibo }}
+                    {% if form.numero_recibo.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.numero_recibo.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-warning">
+                        <span>💸</span> Retirar
+                    </button>
+                    <a href="{% url 'banco:cuentas_detalle' cuenta.pk %}" class="btn">
+                        <span>❌</span> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Información de la Cuenta</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">NÚMERO DE CUENTA</strong>
+                        <p style="font-size: 18px; margin-top: 5px; color: var(--color-secondary); font-weight: bold;">
+                            {{ cuenta.numero_cuenta }}
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">TITULAR</strong>
+                        <p style="font-size: 16px; margin-top: 5px;">
+                            {{ cuenta.socio.nombre_completo }}
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">TIPO DE CUENTA</strong>
+                        <p style="margin-top: 5px;">
+                            <span class="badge badge-info">{{ cuenta.tipo_cuenta.nombre }}</span>
+                        </p>
+                    </div>
+                    
+                    <div style="padding: 20px; background: rgba(255, 152, 0, 0.1); border-radius: var(--radius-md);">
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">SALDO DISPONIBLE</strong>
+                        <p style="font-size: 32px; margin-top: 5px; font-weight: bold; color: var(--color-warning);">
+                            L. {{ cuenta.saldo_actual|floatformat:2 }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
