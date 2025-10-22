@@ -161,7 +161,7 @@
                             {% endif %}
                         </td>
                         <td>{{ mov.concepto|truncatewords:8 }}</td>
-                        <td style="{% if mov.origen == 'INGRESO' %}color: var(--color-success);{% else %}color: var(--color-error);{% endif %} font-weight: bold;">
+                        <td class="{% if mov.origen == 'INGRESO' %}color: var(--color-success);{% else %}color: var(--color-error);{% endif %} font-weight: bold;">
                             {% if mov.origen == 'INGRESO' %}+{% else %}-{% endif %}L. {{ mov.monto|floatformat:2 }}
                         </td>
                         <td>L. {{ mov.saldo_nuevo|floatformat:2 }}</td>
