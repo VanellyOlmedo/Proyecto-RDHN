@@ -108,7 +108,7 @@
                 <div style="display: flex; flex-direction: column; gap: 20px;">
                     <div style="text-align: center; padding: 20px; background: rgba(69, 162, 158, 0.1); border-radius: var(--radius-md);">
                         <strong style="color: var(--color-text-dim); font-size: 14px;">MONTO</strong>
-                        <p style="font-size: 48px; margin-top: 10px; font-weight: bold; 
+                        <p class="font-size: 48px; margin-top: 10px; font-weight: bold; 
                            {% if movimiento.origen == 'INGRESO' %}color: var(--color-success);{% else %}color: var(--color-error);{% endif %}">
                             {% if movimiento.origen == 'INGRESO' %}+{% else %}-{% endif %}L. {{ movimiento.monto|floatformat:2 }}
                         </p>
