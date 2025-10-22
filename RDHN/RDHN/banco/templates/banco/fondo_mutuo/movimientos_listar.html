@@ -1,0 +1,247 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Movimientos - Fondo Mutuo{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container {
+        width: 100% !important;
+    }
+    
+    .select2-container--default .select2-selection--single {
+        border: 1px solid rgba(69, 162, 158, 0.3);
+        border-radius: var(--radius-md);
+        min-height: 42px;
+        padding: 8px 12px;
+        background-color: rgba(11, 12, 16, 0.8);
+        color: var(--color-text);
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 26px;
+        color: var(--color-text);
+    }
+    
+    .select2-dropdown {
+        background-color: var(--bg-card);
+        border: 1px solid rgba(69, 162, 158, 0.3);
+        border-radius: var(--radius-md);
+    }
+    
+    .select2-container--default .select2-results__option {
+        color: var(--color-text);
+        padding: 10px 12px;
+    }
+    
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: var(--color-primary);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">📝 Movimientos del Fondo Mutuo</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Fondo Mutuo</span>
+        <span class="breadcrumb-item">Movimientos</span>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">🔍 Filtros de Búsqueda</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" class="grid grid-4">
+            <div class="form-group">
+                <label class="form-label">Período</label>
+                {{ form.periodo }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Socio</label>
+                {{ form.socio }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Tipo de Movimiento</label>
+                {{ form.origen }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Fecha Desde</label>
+                {{ form.fecha_desde }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Fecha Hasta</label>
+                {{ form.fecha_hasta }}
+            </div>
+            
+            <div class="form-group" style="display: flex; align-items: flex-end; gap: 10px;">
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>🔍</span> Buscar
+                </button>
+                <a href="{% url 'fondo_mutuo:movimientos_listar' %}" class="btn btn-block">
+                    <span>🔄</span> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Totales -->
+<div class="grid grid-2" style="margin-top: 30px;">
+    <div class="card card-stat">
+        <div class="card-stat-icon" style="color: var(--color-success);">💰</div>
+        <div class="card-stat-value">L. {{ totales.total_ingresos|floatformat:2|default:"0.00" }}</div>
+        <div class="card-stat-label">Total Ingresos (Filtrados)</div>
+    </div>
+
+    <div class="card card-stat">
+        <div class="card-stat-icon" style="color: var(--color-error);">💸</div>
+        <div class="card-stat-value">L. {{ totales.total_egresos|floatformat:2|default:"0.00" }}</div>
+        <div class="card-stat-label">Total Egresos (Filtrados)</div>
+    </div>
+</div>
+
+<!-- Listado -->
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Movimientos</h2>
+        <div>
+            {% if page_obj.has_previous or page_obj.has_next %}
+            <span style="color: var(--color-text-dim); font-size: 14px; margin-right: 15px;">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Número</th>
+                        <th>Período</th>
+                        <th>Socio</th>
+                        <th>Tipo</th>
+                        <th>Concepto</th>
+                        <th>Monto</th>
+                        <th>Saldo Resultante</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in page_obj %}
+                    <tr>
+                        <td>{{ mov.fecha_movimiento|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <strong>{{ mov.numero_movimiento }}</strong>
+                        </td>
+                        <td>{{ mov.fondo }}</td>
+                        <td>
+                            {% if mov.socio %}
+                                {{ mov.socio.nombre_completo }}
+                            {% else %}
+                                <span style="color: var(--color-text-dim);">Sistema</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mov.origen == 'INGRESO' %}
+                                <span class="badge badge-success">{{ mov.get_origen_display }}</span>
+                                {% if mov.tipo_aporte %}
+                                    <br><small style="color: var(--color-text-dim);">{{ mov.get_tipo_aporte_display }}</small>
+                                {% endif %}
+                            {% elif mov.origen == 'EGRESO' %}
+                                <span class="badge badge-error">{{ mov.get_origen_display }}</span>
+                            {% else %}
+                                <span class="badge badge-info">{{ mov.get_origen_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ mov.concepto|truncatewords:10 }}</td>
+                        <td style="{% if mov.origen == 'INGRESO' %}color: var(--color-success);{% else %}color: var(--color-error);{% endif %} font-weight: bold; font-size: 15px;">
+                            {% if mov.origen == 'INGRESO' %}+{% else %}-{% endif %}L. {{ mov.monto|floatformat:2 }}
+                        </td>
+                        <td>L. {{ mov.saldo_nuevo|floatformat:2 }}</td>
+                        <td>
+                            <a href="{% url 'fondo_mutuo:movimientos_detalle' mov.pk %}" class="btn btn-sm">
+                                👁️ Ver
+                            </a>
+                            <a href="{% url 'fondo_mutuo:movimientos_imprimir' mov.pk %}" class="btn btn-sm" target="_blank">
+                                🖨️ Imprimir
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px;">
+                            No se encontraron movimientos con los filtros aplicados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginación -->
+        {% if page_obj.has_previous or page_obj.has_next %}
+        <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px;">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-sm">
+                    « Primera
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-sm">
+                    ‹ Anterior
+                </a>
+            {% endif %}
+            
+            <span style="padding: 0 15px; color: var(--color-text-dim);">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-sm">
+                    Siguiente ›
+                </a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-sm">
+                    Última »
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <p style="text-align: center; padding: 40px; color: var(--color-text-dim);">
+            No hay movimientos registrados
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#id_socio').select2({
+            placeholder: 'Todos los socios',
+            allowClear: true,
+            language: {
+                noResults: function() {
+                    return "No se encontraron resultados";
+                },
+                searching: function() {
+                    return "Buscando...";
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
