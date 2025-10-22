@@ -1,0 +1,143 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Aprobar Solicitud - Fondo Mutuo{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">✓ Aprobar Solicitud: {{ solicitud.numero_solicitud }}</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'fondo_mutuo:solicitudes_listar' %}">Solicitudes</a></span>
+        <span class="breadcrumb-item"><a href="{% url 'fondo_mutuo:solicitudes_detalle' solicitud.pk %}">{{ solicitud.numero_solicitud }}</a></span>
+        <span class="breadcrumb-item">Aprobar</span>
+    </div>
+</div>
+
+<div class="grid grid-2" style="align-items: start;">
+    <!-- Formulario -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">✓ Aprobación de Solicitud</h2>
+        </div>
+        
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="alert alert-success">
+                    <span>✓</span>
+                    <div>
+                        <strong>Vas a aprobar esta solicitud</strong>
+                        <p>El monto será desembolsado del fondo inmediatamente y se generará un comprobante.</p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Monto a Aprobar</label>
+                    {{ form.monto_aprobado }}
+                    {% if form.monto_aprobado.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.monto_aprobado.errors.0 }}</span>
+                    {% endif %}
+                    <small style="color: var(--color-text-dim);">Puedes aprobar un monto diferente al solicitado si es necesario</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Comentarios (Opcional)</label>
+                    {{ form.comentarios }}
+                    {% if form.comentarios.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.comentarios.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-success">
+                        <span>✓</span> Confirmar Aprobación
+                    </button>
+                    <a href="{% url 'fondo_mutuo:solicitudes_detalle' solicitud.pk %}" class="btn">
+                        <span>❌</span> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Información de la Solicitud -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📋 Resumen de la Solicitud</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">NÚMERO</strong>
+                        <p style="font-size: 18px; margin-top: 5px; color: var(--color-secondary); font-weight: bold;">
+                            {{ solicitud.numero_solicitud }}
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">SOCIO</strong>
+                        <p style="font-size: 16px; margin-top: 5px;">
+                            {{ solicitud.socio.nombre_completo }}
+                        </p>
+                        <p style="font-size: 13px; color: var(--color-text-dim); margin-top: 3px;">
+                            No. Socio: {{ solicitud.socio.numero_socio }}
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">TIPO DE AYUDA</strong>
+                        <p style="margin-top: 5px;">
+                            <span class="badge badge-info">{{ solicitud.get_tipo_ayuda_display }}</span>
+                        </p>
+                    </div>
+                    
+                    <div style="padding: 15px; background: rgba(69, 162, 158, 0.1); border-radius: var(--radius-md);">
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">MONTO SOLICITADO</strong>
+                        <p style="font-size: 28px; margin-top: 5px; font-weight: bold; color: var(--color-secondary);">
+                            L. {{ solicitud.monto_solicitado|floatformat:2 }}
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">JUSTIFICACIÓN</strong>
+                        <p style="font-size: 13px; margin-top: 5px; line-height: 1.6; text-align: justify;">
+                            {{ solicitud.justificacion|truncatewords:50 }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h2 class="card-title">💰 Estado del Fondo</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">PERÍODO</strong>
+                        <p style="font-size: 16px; margin-top: 5px;">
+                            {{ solicitud.fondo }}
+                        </p>
+                    </div>
+                    
+                    <div style="padding: 15px; background: rgba(76, 175, 80, 0.1); border-radius: var(--radius-md);">
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">SALDO DISPONIBLE</strong>
+                        <p style="font-size: 24px; margin-top: 5px; font-weight: bold; color: var(--color-success);">
+                            L. {{ solicitud.fondo.saldo_disponible|floatformat:2 }}
+                        </p>
+                    </div>
+                    
+                    {% if solicitud.monto_solicitado > solicitud.fondo.saldo_disponible %}
+                    <div class="alert alert-warning">
+                        <span>⚠</span>
+                        <span>El monto solicitado excede el saldo disponible en el fondo.</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
