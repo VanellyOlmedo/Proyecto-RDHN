@@ -60,7 +60,7 @@
                             {% endif %}
                         </td>
                         <td>{{ transaccion.descripcion|truncatewords:8 }}</td>
-                        <td style="{% if 'DEPOSITO' in transaccion.tipo_transaccion or 'PAGO' in transaccion.tipo_transaccion %}color: var(--color-success);{% else %}color: var(--color-error);{% endif %} font-weight: bold;">
+                        <td class="{% if 'DEPOSITO' in transaccion.tipo_transaccion or 'PAGO' in transaccion.tipo_transaccion %}color: var(--color-success);{% else %}color: var(--color-error);{% endif %} font-weight: bold;">
                             L. {{ transaccion.monto|floatformat:2 }}
                         </td>
                         <td>
