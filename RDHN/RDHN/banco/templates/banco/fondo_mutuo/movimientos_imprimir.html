@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprobante - {{ movimiento.numero_movimiento }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            padding: 40px;
+            background: white;
+            color: #333;
+        }
+        
+        .comprobante {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #45A29E;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #45A29E, #66FCF1);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .numero-comprobante {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .numero-comprobante strong {
+            font-size: 24px;
+            letter-spacing: 2px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .tipo-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .tipo-ingreso {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .tipo-egreso {
+            background: #F44336;
+            color: white;
+        }
+        
+        .info-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-group:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .monto-section {
+            background: #f5f5f5;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .monto-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .monto-value {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .monto-ingreso {
+            color: #4CAF50;
+        }
+        
+        .monto-egreso {
+            color: #F44336;
+        }
+        
+        .saldos {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .saldo-item {
+            text-align: center;
+        }
+        
+        .saldo-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .saldo-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #45A29E;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .firma-section {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .firma {
+            text-align: center;
+            width: 200px;
+        }
+        
+        .firma-linea {
+            border-top: 1px solid #333;
+            margin-bottom: 10px;
+        }
+        
+        .firma-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .comprobante {
+                border: none;
+                border-radius: 0;
+            }
+            
+            @page {
+                margin: 1cm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="comprobante">
+        <div class="header">
+            <h1>🤝 FONDO DE AYUDA MUTUA</h1>
+            <p>Red de Desarrollo Sostenible de Honduras</p>
+            <div class="numero-comprobante">
+                <strong>{{ movimiento.numero_movimiento }}</strong>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="tipo-badge {% if movimiento.origen == 'INGRESO' %}tipo-ingreso{% else %}tipo-egreso{% endif %}">
+                {{ movimiento.get_origen_display }}
+                {% if movimiento.tipo_aporte %}- {{ movimiento.get_tipo_aporte_display }}{% endif %}
+            </div>
+            
+            <div class="grid">
+                <div class="info-group">
+                    <div class="info-label">Fecha y Hora</div>
+                    <div class="info-value">{{ movimiento.fecha_movimiento|date:"d/m/Y H:i:s" }}</div>
+                </div>
+                
+                <div class="info-group">
+                    <div class="info-label">Período</div>
+                    <div class="info-value">{{ movimiento.fondo }}</div>
+                </div>
+            </div>
+            
+            {% if movimiento.socio %}
+            <div class="info-group">
+                <div class="info-label">Socio</div>
+                <div class="info-value">{{ movimiento.socio.nombre_completo }}</div>
+                <div style="font-size: 14px; color: #999; margin-top: 5px;">
+                    No. Socio: {{ movimiento.socio.numero_socio }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="info-group">
+                <div class="info-label">Concepto</div>
+                <div class="info-value">{{ movimiento.concepto }}</div>
+            </div>
+            
+            {% if movimiento.observaciones %}
+            <div class="info-group">
+                <div class="info-label">Observaciones</div>
+                <div class="info-value">{{ movimiento.observaciones }}</div>
+            </div>
+            {% endif %}
+            
+            <div class="monto-section">
+                <div class="monto-label">MONTO</div>
+                <div class="monto-value {% if movimiento.origen == 'INGRESO' %}monto-ingreso{% else %}monto-egreso{% endif %}">
+                    {% if movimiento.origen == 'INGRESO' %}+{% else %}-{% endif %}L. {{ movimiento.monto|floatformat:2 }}
+                </div>
+            </div>
+            
+            <div class="saldos">
+                <div class="saldo-item">
+                    <div class="saldo-label">SALDO ANTERIOR</div>
+                    <div class="saldo-value">L. {{ movimiento.saldo_anterior|floatformat:2 }}</div>
+                </div>
+                <div class="saldo-item">
+                    <div class="saldo-label">SALDO NUEVO</div>
+                    <div class="saldo-value">L. {{ movimiento.saldo_nuevo|floatformat:2 }}</div>
+                </div>
+            </div>
+            
+            {% if movimiento.solicitud_ayuda %}
+            <div class="info-group" style="margin-top: 30px;">
+                <div class="info-label">Relacionado con Solicitud</div>
+                <div class="info-value">{{ movimiento.solicitud_ayuda.numero_solicitud }}</div>
+                <div style="font-size: 14px; color: #999; margin-top: 5px;">
+                    Tipo: {{ movimiento.solicitud_ayuda.get_tipo_ayuda_display }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="info-group" style="margin-top: 30px;">
+                <div class="info-label">Realizado por</div>
+                <div class="info-value">{{ movimiento.realizado_por.get_full_name|default:movimiento.realizado_por.usuario }}</div>
+            </div>
+            
+            <div class="firma-section">
+                <div class="firma">
+                    <div class="firma-linea"></div>
+                    <div class="firma-label">Firma del Responsable</div>
+                </div>
+                <div class="firma">
+                    <div class="firma-linea"></div>
+                    <div class="firma-label">Firma del Socio</div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>Este comprobante es generado automáticamente por el Sistema de Gestión</p>
+                <p>Impreso el {{ "now"|date:"d/m/Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-imprimir al cargar
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>
