@@ -1,0 +1,224 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Reporte Kardex - Fondo Mutuo{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">📑 Reporte Kardex del Fondo Mutuo</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Fondo Mutuo</span>
+        <span class="breadcrumb-item">Reportes</span>
+        <span class="breadcrumb-item">Kardex</span>
+    </div>
+</div>
+
+<!-- Selector de Período -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">📅 Seleccionar Período</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" style="display: flex; gap: 15px; align-items: flex-end;">
+            <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                <label class="form-label">Período</label>
+                <select name="periodo" class="form-select" onchange="this.form.submit()">
+                    <option value="">Seleccione un período</option>
+                    {% for periodo_item in periodos %}
+                        <option value="{{ periodo_item }}" {% if fondo and fondo.periodo == periodo_item %}selected{% endif %}>
+                            {{ periodo_item|slice:"4:6" }}/{{ periodo_item|slice:":4" }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <span>🔍</span> Ver Kardex
+            </button>
+            <button type="button" onclick="window.print()" class="btn">
+                <span>🖨️</span> Imprimir
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if fondo %}
+<!-- Información del Período -->
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h2 class="card-title">📊 Información del Período: {{ fondo }}</h2>
+        <div>
+            {% if fondo.esta_abierto %}
+                <span class="badge badge-success">ABIERTO</span>
+            {% else %}
+                <span class="badge badge-error">CERRADO</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-4">
+            <div style="text-align: center; padding: 15px;">
+                <strong style="color: var(--color-text-dim); font-size: 12px;">TOTAL INGRESOS</strong>
+                <p style="font-size: 24px; margin-top: 5px; font-weight: bold; color: var(--color-success);">
+                    L. {{ totales.total_ingresos|floatformat:2|default:"0.00" }}
+                </p>
+            </div>
+            <div style="text-align: center; padding: 15px;">
+                <strong style="color: var(--color-text-dim); font-size: 12px;">TOTAL EGRESOS</strong>
+                <p style="font-size: 24px; margin-top: 5px; font-weight: bold; color: var(--color-error);">
+                    L. {{ totales.total_egresos|floatformat:2|default:"0.00" }}
+                </p>
+            </div>
+            <div style="text-align: center; padding: 15px;">
+                <strong style="color: var(--color-text-dim); font-size: 12px;">SALDO FINAL</strong>
+                <p style="font-size: 24px; margin-top: 5px; font-weight: bold; color: var(--color-secondary);">
+                    L. {{ fondo.saldo_disponible|floatformat:2 }}
+                </p>
+            </div>
+            <div style="text-align: center; padding: 15px;">
+                <strong style="color: var(--color-text-dim); font-size: 12px;">MOVIMIENTOS</strong>
+                <p style="font-size: 24px; margin-top: 5px; font-weight: bold; color: var(--color-primary);">
+                    {{ movimientos.count }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kardex Detallado -->
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h2 class="card-title">📋 Kardex Detallado</h2>
+    </div>
+    
+    <div class="card-body">
+        {% if movimientos %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 140px;">Fecha</th>
+                        <th style="width: 150px;">Número</th>
+                        <th>Socio</th>
+                        <th style="width: 120px;">Tipo</th>
+                        <th>Concepto</th>
+                        <th style="width: 120px; text-align: right;">Ingresos</th>
+                        <th style="width: 120px; text-align: right;">Egresos</th>
+                        <th style="width: 120px; text-align: right;">Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimientos %}
+                    <tr>
+                        <td>{{ mov.fecha_movimiento|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'fondo_mutuo:movimientos_detalle' mov.pk %}">
+                                {{ mov.numero_movimiento }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if mov.socio %}
+                                {{ mov.socio.nombre_completo }}
+                            {% else %}
+                                <span style="color: var(--color-text-dim);">Sistema</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mov.origen == 'INGRESO' %}
+                                <span class="badge badge-success" style="font-size: 10px;">ING</span>
+                            {% elif mov.origen == 'EGRESO' %}
+                                <span class="badge badge-error" style="font-size: 10px;">EGR</span>
+                            {% else %}
+                                <span class="badge badge-info" style="font-size: 10px;">{{ mov.origen }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ mov.concepto|truncatewords:10 }}</td>
+                        <td class="text-align: right; {% if mov.origen == 'INGRESO' %}color: var(--color-success); font-weight: bold;{% endif %}">
+                            {% if mov.origen == 'INGRESO' %}
+                                L. {{ mov.monto|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-align: right; {% if mov.origen == 'EGRESO' %}color: var(--color-error); font-weight: bold;{% endif %}">
+                            {% if mov.origen == 'EGRESO' %}
+                                L. {{ mov.monto|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right; font-weight: bold;">
+                            L. {{ mov.saldo_nuevo|floatformat:2 }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    
+                    <!-- Fila de Totales -->
+                    <tr style="background: rgba(69, 162, 158, 0.1); font-weight: bold;">
+                        <td colspan="5" style="text-align: right;">TOTALES:</td>
+                        <td style="text-align: right; color: var(--color-success);">
+                            L. {{ totales.total_ingresos|floatformat:2|default:"0.00" }}
+                        </td>
+                        <td style="text-align: right; color: var(--color-error);">
+                            L. {{ totales.total_egresos|floatformat:2|default:"0.00" }}
+                        </td>
+                        <td style="text-align: right; color: var(--color-secondary);">
+                            L. {{ fondo.saldo_disponible|floatformat:2 }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="text-align: center; padding: 40px; color: var(--color-text-dim);">
+            No hay movimientos registrados en este período
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="card" style="margin-top: 30px;">
+    <div class="card-body">
+        <div style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 64px; margin-bottom: 20px;">📑</div>
+            <h3 style="color: var(--color-secondary); margin-bottom: 10px;">
+                Selecciona un Período
+            </h3>
+            <p style="color: var(--color-text-dim);">
+                Elige un período del selector para ver el reporte kardex completo.
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    @media print {
+        .content-header,
+        .card:first-child,
+        .sidebar,
+        .topbar,
+        .btn,
+        .breadcrumb {
+            display: none !important;
+        }
+        
+        .card {
+            box-shadow: none;
+            border: 1px solid #ddd;
+            page-break-inside: avoid;
+        }
+        
+        body {
+            background: white;
+            color: black;
+        }
+        
+        .table {
+            font-size: 12px;
+        }
+        
+        .badge {
+            border: 1px solid #333;
+        }
+    }
+</style>
+{% endblock %}
