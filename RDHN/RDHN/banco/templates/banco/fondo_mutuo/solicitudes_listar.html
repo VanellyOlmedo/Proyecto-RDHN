@@ -1,0 +1,246 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Solicitudes de Ayuda - Fondo Mutuo{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container {
+        width: 100% !important;
+    }
+    
+    .select2-container--default .select2-selection--single {
+        border: 1px solid rgba(69, 162, 158, 0.3);
+        border-radius: var(--radius-md);
+        min-height: 42px;
+        padding: 8px 12px;
+        background-color: rgba(11, 12, 16, 0.8);
+        color: var(--color-text);
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 26px;
+        color: var(--color-text);
+    }
+    
+    .select2-dropdown {
+        background-color: var(--bg-card);
+        border: 1px solid rgba(69, 162, 158, 0.3);
+        border-radius: var(--radius-md);
+    }
+    
+    .select2-container--default .select2-results__option {
+        color: var(--color-text);
+        padding: 10px 12px;
+    }
+    
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: var(--color-primary);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">📋 Solicitudes de Ayuda Mutua</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Fondo Mutuo</span>
+        <span class="breadcrumb-item">Solicitudes</span>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">🔍 Filtros de Búsqueda</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" class="grid grid-4">
+            <div class="form-group">
+                <label class="form-label">Estado</label>
+                {{ form.estado }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Tipo de Ayuda</label>
+                {{ form.tipo_ayuda }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Socio</label>
+                {{ form.socio }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Fecha Desde</label>
+                {{ form.fecha_desde }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Fecha Hasta</label>
+                {{ form.fecha_hasta }}
+            </div>
+            
+            <div class="form-group" style="display: flex; align-items: flex-end; gap: 10px;">
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>🔍</span> Buscar
+                </button>
+                <a href="{% url 'fondo_mutuo:solicitudes_listar' %}" class="btn btn-block">
+                    <span>🔄</span> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Listado -->
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Solicitudes</h2>
+        <div style="display: flex; gap: 10px;">
+            <a href="{% url 'fondo_mutuo:solicitudes_crear' %}" class="btn btn-primary">
+                <span>➕</span> Nueva Solicitud
+            </a>
+            <a href="{% url 'fondo_mutuo:solicitudes_pendientes' %}" class="btn btn-warning">
+                <span>⏳</span> Pendientes
+            </a>
+            {% if page_obj.has_previous or page_obj.has_next %}
+            <span style="color: var(--color-text-dim); font-size: 14px; line-height: 40px; margin-left: 15px;">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Fecha</th>
+                        <th>Socio</th>
+                        <th>Tipo de Ayuda</th>
+                        <th>Monto Solicitado</th>
+                        <th>Monto Aprobado</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sol in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ sol.numero_solicitud }}</strong>
+                        </td>
+                        <td>{{ sol.fecha_solicitud|date:"d/m/Y" }}</td>
+                        <td>{{ sol.socio.nombre_completo }}</td>
+                        <td>
+                            <span class="badge badge-info">{{ sol.get_tipo_ayuda_display }}</span>
+                        </td>
+                        <td style="font-weight: bold;">
+                            L. {{ sol.monto_solicitado|floatformat:2 }}
+                        </td>
+                        <td style="font-weight: bold;">
+                            {% if sol.monto_aprobado %}
+                                <span style="color: var(--color-success);">L. {{ sol.monto_aprobado|floatformat:2 }}</span>
+                            {% else %}
+                                <span style="color: var(--color-text-dim);">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sol.estado == 'PENDIENTE' %}
+                                <span class="badge badge-warning">{{ sol.get_estado_display }}</span>
+                            {% elif sol.estado == 'EN_REVISION' %}
+                                <span class="badge badge-info">{{ sol.get_estado_display }}</span>
+                            {% elif sol.estado == 'APROBADA' %}
+                                <span class="badge badge-success">{{ sol.get_estado_display }}</span>
+                            {% elif sol.estado == 'RECHAZADA' %}
+                                <span class="badge badge-error">{{ sol.get_estado_display }}</span>
+                            {% elif sol.estado == 'DESEMBOLSADA' %}
+                                <span class="badge badge-primary">{{ sol.get_estado_display }}</span>
+                            {% else %}
+                                <span class="badge">{{ sol.get_estado_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'fondo_mutuo:solicitudes_detalle' sol.pk %}" class="btn btn-sm">
+                                👁️ Ver
+                            </a>
+                            {% if sol.estado == 'PENDIENTE' or sol.estado == 'EN_REVISION' %}
+                            <a href="{% url 'fondo_mutuo:solicitudes_aprobar' sol.pk %}" class="btn btn-sm btn-success">
+                                ✓ Aprobar
+                            </a>
+                            <a href="{% url 'fondo_mutuo:solicitudes_rechazar' sol.pk %}" class="btn btn-sm btn-error">
+                                ✕ Rechazar
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            No se encontraron solicitudes con los filtros aplicados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginación -->
+        {% if page_obj.has_previous or page_obj.has_next %}
+        <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px;">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-sm">
+                    « Primera
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-sm">
+                    ‹ Anterior
+                </a>
+            {% endif %}
+            
+            <span style="padding: 0 15px; color: var(--color-text-dim);">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-sm">
+                    Siguiente ›
+                </a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-sm">
+                    Última »
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <p style="text-align: center; padding: 40px; color: var(--color-text-dim);">
+            No hay solicitudes registradas
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#id_socio').select2({
+            placeholder: 'Todos los socios',
+            allowClear: true,
+            language: {
+                noResults: function() {
+                    return "No se encontraron resultados";
+                },
+                searching: function() {
+                    return "Buscando...";
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
