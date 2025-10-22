@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Nuevo Período - Fondo Mutuo{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">📅 Nuevo Período del Fondo Mutuo</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'fondo_mutuo:fondos_listar' %}">Períodos</a></span>
+        <span class="breadcrumb-item">Nuevo</span>
+    </div>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">Información del Período</h2>
+    </div>
+    
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="alert alert-info">
+                <span>ℹ</span>
+                <span>El período debe tener formato YYYYMM (ejemplo: 202401 para enero 2024). Las fechas de inicio y fin deben corresponder al primer y último día del mes.</span>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Período (YYYYMM)</label>
+                {{ form.periodo }}
+                {% if form.periodo.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.periodo.errors.0 }}</span>
+                {% endif %}
+                <small style="color: var(--color-text-dim);">Ejemplo: 202401 para Enero 2024</small>
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Fecha Inicio</label>
+                    {{ form.fecha_inicio }}
+                    {% if form.fecha_inicio.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.fecha_inicio.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Fecha Fin</label>
+                    {{ form.fecha_fin }}
+                    {% if form.fecha_fin.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.fecha_fin.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Estado</label>
+                {{ form.estado }}
+                {% if form.estado.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.estado.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Observaciones</label>
+                {{ form.observaciones }}
+                {% if form.observaciones.errors %}
+                    <span style="color: var(--color-error); font-size: 12px;">{{ form.observaciones.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span> Crear Período
+                </button>
+                <a href="{% url 'fondo_mutuo:fondos_listar' %}" class="btn">
+                    <span>❌</span> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
