@@ -1,0 +1,238 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Nueva Solicitud de Ayuda - Fondo Mutuo{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container {
+        width: 100% !important;
+    }
+    
+    .select2-container--default .select2-selection--single {
+        border: 1px solid rgba(69, 162, 158, 0.3);
+        border-radius: var(--radius-md);
+        min-height: 42px;
+        padding: 8px 12px;
+        background-color: rgba(11, 12, 16, 0.8);
+        color: var(--color-text);
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 26px;
+        color: var(--color-text);
+    }
+    
+    .select2-dropdown {
+        background-color: var(--bg-card);
+        border: 1px solid rgba(69, 162, 158, 0.3);
+        border-radius: var(--radius-md);
+    }
+    
+    .select2-container--default .select2-results__option {
+        color: var(--color-text);
+        padding: 10px 12px;
+    }
+    
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: var(--color-primary);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">📝 Nueva Solicitud de Ayuda Mutua</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'fondo_mutuo:solicitudes_listar' %}">Solicitudes</a></span>
+        <span class="breadcrumb-item">Nueva</span>
+    </div>
+</div>
+
+{% if not periodo_actual %}
+<div class="alert alert-error">
+    <span>✕</span>
+    <div>
+        <strong>No hay período activo</strong>
+        <p>No existe un fondo abierto para el período actual. Debes crear uno antes de solicitar ayuda.</p>
+        <a href="{% url 'fondo_mutuo:fondos_crear_actual' %}" class="btn btn-primary btn-sm" style="margin-top: 10px;">
+            Crear Fondo del Período Actual
+        </a>
+    </div>
+</div>
+{% else %}
+
+<div class="grid grid-2" style="align-items: start;">
+    <!-- Formulario -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Información de la Solicitud</h2>
+        </div>
+        
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="alert alert-info">
+                    <span>ℹ</span>
+                    <span>La solicitud será revisada por un supervisor. Asegúrate de proporcionar toda la información necesaria y adjuntar documentos de soporte.</span>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Socio Solicitante</label>
+                    {{ form.socio }}
+                    {% if form.socio.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.socio.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Tipo de Ayuda</label>
+                    {{ form.tipo_ayuda }}
+                    {% if form.tipo_ayuda.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.tipo_ayuda.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Monto Solicitado</label>
+                    {{ form.monto_solicitado }}
+                    {% if form.monto_solicitado.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.monto_solicitado.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Justificación Detallada</label>
+                    {{ form.justificacion }}
+                    {% if form.justificacion.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.justificacion.errors.0 }}</span>
+                    {% endif %}
+                    <small style="color: var(--color-text-dim);">{{ form.justificacion.help_text }}</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Documento de Soporte</label>
+                    {{ form.documento_soporte }}
+                    {% if form.documento_soporte.errors %}
+                        <span style="color: var(--color-error); font-size: 12px;">{{ form.documento_soporte.errors.0 }}</span>
+                    {% endif %}
+                    <small style="color: var(--color-text-dim);">{{ form.documento_soporte.help_text }}</small>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary">
+                        <span>💾</span> Enviar Solicitud
+                    </button>
+                    <a href="{% url 'fondo_mutuo:solicitudes_listar' %}" class="btn">
+                        <span>❌</span> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Información del Período y Requisitos -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📊 Período Actual</h2>
+                <span class="badge badge-success">ABIERTO</span>
+            </div>
+            <div class="card-body">
+                <div style="margin-bottom: 20px;">
+                    <strong style="color: var(--color-text-dim); font-size: 12px;">PERÍODO</strong>
+                    <p style="font-size: 20px; margin-top: 5px; color: var(--color-secondary);">
+                        {{ periodo_actual }}
+                    </p>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(69, 162, 158, 0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--color-text-dim);">Saldo Disponible:</span>
+                        <span style="font-size: 22px; font-weight: bold; color: var(--color-secondary);">
+                            L. {{ periodo_actual.saldo_disponible|floatformat:2 }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h2 class="card-title">📋 Requisitos</h2>
+            </div>
+            <div class="card-body">
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="padding: 10px 0; border-bottom: 1px solid rgba(69, 162, 158, 0.1); display: flex; align-items: center; gap: 10px;">
+                        <span style="color: var(--color-success); font-size: 18px;">✓</span>
+                        <span>Ser socio activo</span>
+                    </li>
+                    <li style="padding: 10px 0; border-bottom: 1px solid rgba(69, 162, 158, 0.1); display: flex; align-items: center; gap: 10px;">
+                        <span style="color: var(--color-success); font-size: 18px;">✓</span>
+                        <span>Tener al menos 6 meses de antigüedad</span>
+                    </li>
+                    <li style="padding: 10px 0; border-bottom: 1px solid rgba(69, 162, 158, 0.1); display: flex; align-items: center; gap: 10px;">
+                        <span style="color: var(--color-success); font-size: 18px;">✓</span>
+                        <span>No tener solicitudes pendientes</span>
+                    </li>
+                    <li style="padding: 10px 0; display: flex; align-items: center; gap: 10px;">
+                        <span style="color: var(--color-success); font-size: 18px;">✓</span>
+                        <span>Presentar documentación de soporte</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h2 class="card-title">ℹ️ Tipos de Ayuda</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <strong style="color: var(--color-secondary);">🏥 Emergencia Médica</strong>
+                        <p style="font-size: 13px; color: var(--color-text-dim); margin-top: 5px;">
+                            Gastos médicos no cubiertos, cirugías, tratamientos.
+                        </p>
+                    </div>
+                    <div>
+                        <strong style="color: var(--color-secondary);">⚰️ Fallecimiento de Familiar</strong>
+                        <p style="font-size: 13px; color: var(--color-text-dim); margin-top: 5px;">
+                            Gastos funerarios de familiares directos.
+                        </p>
+                    </div>
+                    <div>
+                        <strong style="color: var(--color-secondary);">🏠 Calamidad Doméstica</strong>
+                        <p style="font-size: 13px; color: var(--color-text-dim); margin-top: 5px;">
+                            Incendios, inundaciones, desastres naturales.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#id_socio').select2({
+            placeholder: 'Seleccione un socio',
+            allowClear: true,
+            language: {
+                noResults: function() {
+                    return "No se encontraron resultados";
+                },
+                searching: function() {
+                    return "Buscando...";
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
