@@ -1,0 +1,258 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Detalle Período - Fondo Mutuo{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">📅 Detalle del Período: {{ fondo }}</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'fondo_mutuo:fondos_listar' %}">Períodos</a></span>
+        <span class="breadcrumb-item">{{ fondo.periodo }}</span>
+    </div>
+</div>
+
+<!-- Información General -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">📊 Información General</h2>
+        <div style="display: flex; gap: 10px;">
+            {% if fondo.esta_abierto %}
+                <span class="badge badge-success">ABIERTO</span>
+                <a href="{% url 'fondo_mutuo:fondos_cerrar' fondo.pk %}" class="btn btn-sm btn-warning">
+                    🔒 Cerrar Período
+                </a>
+            {% else %}
+                <span class="badge badge-error">CERRADO</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-3">
+            <div>
+                <strong style="color: var(--color-text-dim);">Fecha Inicio:</strong>
+                <p style="font-size: 18px; margin-top: 5px;">{{ fondo.fecha_inicio|date:"d/m/Y" }}</p>
+            </div>
+            <div>
+                <strong style="color: var(--color-text-dim);">Fecha Fin:</strong>
+                <p style="font-size: 18px; margin-top: 5px;">{{ fondo.fecha_fin|date:"d/m/Y" }}</p>
+            </div>
+            <div>
+                {% if fondo.fecha_cierre %}
+                <strong style="color: var(--color-text-dim);">Fecha Cierre:</strong>
+                <p style="font-size: 18px; margin-top: 5px;">{{ fondo.fecha_cierre|date:"d/m/Y" }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if fondo.observaciones %}
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(69, 162, 158, 0.2);">
+            <strong style="color: var(--color-text-dim);">Observaciones:</strong>
+            <p style="margin-top: 5px;">{{ fondo.observaciones }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="grid grid-4" style="margin-top: 30px;">
+    <div class="card card-stat">
+        <div class="card-stat-icon" style="color: var(--color-success);">💰</div>
+        <div class="card-stat-value">L. {{ fondo.total_ingresos|floatformat:2 }}</div>
+        <div class="card-stat-label">Total Ingresos</div>
+        <div class="card-stat-change" style="color: var(--color-text-dim); font-size: 13px; margin-top: 8px;">
+            {{ stats.total_aportantes }} aportantes
+        </div>
+    </div>
+
+    <div class="card card-stat">
+        <div class="card-stat-icon" style="color: var(--color-error);">💸</div>
+        <div class="card-stat-value">L. {{ fondo.total_egresos|floatformat:2 }}</div>
+        <div class="card-stat-label">Total Egresos</div>
+        <div class="card-stat-change" style="color: var(--color-text-dim); font-size: 13px; margin-top: 8px;">
+            {{ stats.total_ayudas_otorgadas }} ayudas otorgadas
+        </div>
+    </div>
+
+    <div class="card card-stat">
+        <div class="card-stat-icon" style="color: var(--color-secondary);">💵</div>
+        <div class="card-stat-value">L. {{ fondo.saldo_disponible|floatformat:2 }}</div>
+        <div class="card-stat-label">Saldo Disponible</div>
+    </div>
+
+    <div class="card card-stat">
+        <div class="card-stat-icon" style="color: var(--color-warning);">📋</div>
+        <div class="card-stat-value">{{ solicitudes.count }}</div>
+        <div class="card-stat-label">Total Solicitudes</div>
+        <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 10px; font-size: 11px;">
+            <span style="color: var(--color-warning);">⏳ {{ stats.solicitudes_pendientes }} Pendientes</span>
+            <span style="color: var(--color-success);">✓ {{ stats.solicitudes_aprobadas }} Aprobadas</span>
+            <span style="color: var(--color-error);">✕ {{ stats.solicitudes_rechazadas }} Rechazadas</span>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs para Movimientos y Solicitudes -->
+<div class="card" style="margin-top: 30px;">
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab(event, 'movimientos')">📝 Movimientos</button>
+        <button class="tab" onclick="switchTab(event, 'solicitudes')">📋 Solicitudes</button>
+    </div>
+    
+    <!-- Tab Movimientos -->
+    <div id="movimientos" class="tab-content" style="display: block;">
+        <div class="card-header">
+            <h2 class="card-title">Movimientos del Período (Últimos 50)</h2>
+            <a href="{% url 'fondo_mutuo:reportes_kardex' %}?periodo={{ fondo.periodo }}" class="btn btn-sm">
+                📑 Ver Kardex Completo
+            </a>
+        </div>
+        <div class="card-body">
+            {% if movimientos %}
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Número</th>
+                            <th>Socio</th>
+                            <th>Tipo</th>
+                            <th>Concepto</th>
+                            <th>Monto</th>
+                            <th>Saldo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mov in movimientos %}
+                        <tr>
+                            <td>{{ mov.fecha_movimiento|date:"d/m/Y H:i" }}</td>
+                            <td>{{ mov.numero_movimiento }}</td>
+                            <td>
+                                {% if mov.socio %}
+                                    {{ mov.socio.nombre_completo }}
+                                {% else %}
+                                    <span style="color: var(--color-text-dim);">Sistema</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if mov.origen == 'INGRESO' %}
+                                    <span class="badge badge-success">{{ mov.get_origen_display }}</span>
+                                {% elif mov.origen == 'EGRESO' %}
+                                    <span class="badge badge-error">{{ mov.get_origen_display }}</span>
+                                {% else %}
+                                    <span class="badge badge-info">{{ mov.get_origen_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ mov.concepto|truncatewords:8 }}</td>
+                            <td style="{% if mov.origen == 'INGRESO' %}color: var(--color-success);{% else %}color: var(--color-error);{% endif %} font-weight: bold;">
+                                {% if mov.origen == 'INGRESO' %}+{% else %}-{% endif %}L. {{ mov.monto|floatformat:2 }}
+                            </td>
+                            <td>L. {{ mov.saldo_nuevo|floatformat:2 }}</td>
+                            <td>
+                                <a href="{% url 'fondo_mutuo:movimientos_detalle' mov.pk %}" class="btn btn-sm">
+                                    👁️ Ver
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="text-align: center; padding: 40px; color: var(--color-text-dim);">
+                No hay movimientos registrados en este período
+            </p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Tab Solicitudes -->
+    <div id="solicitudes" class="tab-content" style="display: none;">
+        <div class="card-header">
+            <h2 class="card-title">Solicitudes del Período</h2>
+        </div>
+        <div class="card-body">
+            {% if solicitudes %}
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Fecha</th>
+                            <th>Socio</th>
+                            <th>Tipo</th>
+                            <th>Monto Solicitado</th>
+                            <th>Monto Aprobado</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sol in solicitudes %}
+                        <tr>
+                            <td>{{ sol.numero_solicitud }}</td>
+                            <td>{{ sol.fecha_solicitud|date:"d/m/Y" }}</td>
+                            <td>{{ sol.socio.nombre_completo }}</td>
+                            <td>
+                                <span class="badge badge-info">{{ sol.get_tipo_ayuda_display }}</span>
+                            </td>
+                            <td>L. {{ sol.monto_solicitado|floatformat:2 }}</td>
+                            <td>
+                                {% if sol.monto_aprobado %}
+                                    L. {{ sol.monto_aprobado|floatformat:2 }}
+                                {% else %}
+                                    <span style="color: var(--color-text-dim);">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if sol.estado == 'PENDIENTE' %}
+                                    <span class="badge badge-warning">{{ sol.get_estado_display }}</span>
+                                {% elif sol.estado == 'EN_REVISION' %}
+                                    <span class="badge badge-info">{{ sol.get_estado_display }}</span>
+                                {% elif sol.estado == 'APROBADA' %}
+                                    <span class="badge badge-success">{{ sol.get_estado_display }}</span>
+                                {% elif sol.estado == 'RECHAZADA' %}
+                                    <span class="badge badge-error">{{ sol.get_estado_display }}</span>
+                                {% else %}
+                                    <span class="badge">{{ sol.get_estado_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'fondo_mutuo:solicitudes_detalle' sol.pk %}" class="btn btn-sm">
+                                    👁️ Ver
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="text-align: center; padding: 40px; color: var(--color-text-dim);">
+                No hay solicitudes registradas en este período
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function switchTab(event, tabName) {
+    // Ocultar todos los contenidos de tabs
+    const tabContents = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < tabContents.length; i++) {
+        tabContents[i].style.display = 'none';
+    }
+    
+    // Remover clase active de todos los tabs
+    const tabs = document.getElementsByClassName('tab');
+    for (let i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove('active');
+    }
+    
+    // Mostrar el tab seleccionado
+    document.getElementById(tabName).style.display = 'block';
+    event.currentTarget.classList.add('active');
+}
+</script>
+{% endblock %}
