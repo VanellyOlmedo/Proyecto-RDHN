@@ -1,0 +1,89 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Cuentas de Ahorro - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">💰 Cuentas de Ahorro</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item">Banco</span>
+        <span class="breadcrumb-item">Cuentas de Ahorro</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Cuentas</h2>
+        <a href="{% url 'banco:cuentas_crear' %}" class="btn btn-primary">
+            <span>➕</span> Nueva Cuenta
+        </a>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Número de Cuenta</th>
+                        <th>Socio</th>
+                        <th>Tipo</th>
+                        <th>Saldo Actual</th>
+                        <th>Fecha Apertura</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cuenta in cuentas %}
+                    <tr>
+                        <td>
+                            <strong>{{ cuenta.numero_cuenta }}</strong>
+                        </td>
+                        <td>
+                            <a href="{% url 'core:socios_detalle' cuenta.socio.pk %}">
+                                {{ cuenta.socio.nombre_completo }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge badge-info">{{ cuenta.tipo_cuenta.nombre }}</span>
+                        </td>
+                        <td style="font-size: 16px; font-weight: bold; color: var(--color-success);">
+                            L. {{ cuenta.saldo_actual|floatformat:2 }}
+                        </td>
+                        <td>{{ cuenta.fecha_apertura|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if cuenta.estado.codigo == 'ACTIVA' %}
+                                <span class="badge badge-success">{{ cuenta.estado.nombre }}</span>
+                            {% elif cuenta.estado.codigo == 'CERRADA' %}
+                                <span class="badge badge-error">{{ cuenta.estado.nombre }}</span>
+                            {% else %}
+                                <span class="badge badge-warning">{{ cuenta.estado.nombre }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'banco:cuentas_detalle' cuenta.pk %}" class="btn btn-sm">
+                                👁️ Ver
+                            </a>
+                            <a href="{% url 'banco:cuentas_depositar' cuenta.pk %}" class="btn btn-sm btn-success">
+                                💰 Depositar
+                            </a>
+                            {% if cuenta.tipo_cuenta.es_retirable %}
+                            <a href="{% url 'banco:cuentas_retirar' cuenta.pk %}" class="btn btn-sm btn-warning">
+                                💸 Retirar
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px;">
+                            No hay cuentas de ahorro registradas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
