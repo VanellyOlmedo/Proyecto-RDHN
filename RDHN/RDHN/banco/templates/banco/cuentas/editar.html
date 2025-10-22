@@ -1,0 +1,144 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Detalle Cuenta - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">💰 Cuenta: {{ cuenta.numero_cuenta }}</h1>
+    <div class="breadcrumb">
+        <span class="breadcrumb-item"><a href="{% url 'banco:cuentas_listar' %}">Cuentas</a></span>
+        <span class="breadcrumb-item">{{ cuenta.numero_cuenta }}</span>
+    </div>
+</div>
+
+<div class="grid grid-2" style="align-items: start;">
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Información de la Cuenta</h2>
+                <div>
+                    {% if cuenta.estado.codigo == 'ACTIVA' %}
+                        <span class="badge badge-success">{{ cuenta.estado.nombre }}</span>
+                    {% else %}
+                        <span class="badge badge-error">{{ cuenta.estado.nombre }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">SOCIO TITULAR</strong>
+                        <p style="font-size: 18px; margin-top: 5px;">
+                            <a href="{% url 'core:socios_detalle' cuenta.socio.pk %}">
+                                {{ cuenta.socio.nombre_completo }}
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">TIPO DE CUENTA</strong>
+                        <p style="margin-top: 5px;">
+                            <span class="badge badge-info">{{ cuenta.tipo_cuenta.nombre }}</span>
+                        </p>
+                    </div>
+                    
+                    <div class="grid grid-2">
+                        <div>
+                            <strong style="color: var(--color-text-dim); font-size: 12px;">FECHA APERTURA</strong>
+                            <p style="margin-top: 5px;">{{ cuenta.fecha_apertura|date:"d/m/Y" }}</p>
+                        </div>
+                        {% if cuenta.fecha_cierre %}
+                        <div>
+                            <strong style="color: var(--color-text-dim); font-size: 12px;">FECHA CIERRE</strong>
+                            <p style="margin-top: 5px;">{{ cuenta.fecha_cierre|date:"d/m/Y" }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if cuenta.monto_deduccion_planilla %}
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">DEDUCCIÓN PLANILLA</strong>
+                        <p style="margin-top: 5px; font-weight: bold;">L. {{ cuenta.monto_deduccion_planilla|floatformat:2 }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if cuenta.observaciones %}
+                    <div>
+                        <strong style="color: var(--color-text-dim); font-size: 12px;">OBSERVACIONES</strong>
+                        <p style="margin-top: 5px; font-size: 14px;">{{ cuenta.observaciones }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card card-stat">
+        <div class="card-stat-icon" style="color: var(--color-success);">💰</div>
+        <div class="card-stat-value">L. {{ cuenta.saldo_actual|floatformat:2 }}</div>
+        <div class="card-stat-label">Saldo Actual</div>
+    </div>
+</div>
+
+<div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
+    <a href="{% url 'banco:cuentas_depositar' cuenta.pk %}" class="btn btn-success">
+        <span>💰</span> Depositar
+    </a>
+    {% if cuenta.tipo_cuenta.es_retirable %}
+    <a href="{% url 'banco:cuentas_retirar' cuenta.pk %}" class="btn btn-warning">
+        <span>💸</span> Retirar
+    </a>
+    {% endif %}
+    <a href="{% url 'banco:cuentas_editar' cuenta.pk %}" class="btn">
+        <span>✏️</span> Editar
+    </a>
+</div>
+
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h2 class="card-title">📝 Últimas Transacciones</h2>
+    </div>
+    <div class="card-body">
+        {% if transacciones %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Monto</th>
+                        <th>Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaccion in transacciones %}
+                    <tr>
+                        <td>{{ transaccion.fecha_transaccion|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if transaccion.tipo_transaccion == 'DEPOSITO' %}
+                                <span class="badge badge-success">{{ transaccion.get_tipo_transaccion_display }}</span>
+                            {% elif transaccion.tipo_transaccion == 'RETIRO' %}
+                                <span class="badge badge-error">{{ transaccion.get_tipo_transaccion_display }}</span>
+                            {% else %}
+                                <span class="badge badge-info">{{ transaccion.get_tipo_transaccion_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ transaccion.descripcion|truncatewords:10 }}</td>
+                        <td style="{% if transaccion.tipo_transaccion == 'DEPOSITO' %}color: var(--color-success);{% else %}color: var(--color-error);{% endif %} font-weight: bold;">
+                            {% if transaccion.tipo_transaccion == 'DEPOSITO' %}+{% else %}-{% endif %}L. {{ transaccion.monto|floatformat:2 }}
+                        </td>
+                        <td>L. {{ transaccion.saldo_nuevo|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="text-align: center; padding: 40px; color: var(--color-text-dim);">
+            No hay transacciones registradas
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
